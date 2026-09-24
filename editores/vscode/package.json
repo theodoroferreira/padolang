@@ -1,0 +1,111 @@
+{
+  "name": "padolang",
+  "displayName": "Padolang",
+  "description": "Suporte à padolang👍: cores, erros, formatação e execução de arquivos .padoin",
+  "version": "0.1.0",
+  "publisher": "padolang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theodoroferreira/padolang"
+  },
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "padolang",
+        "aliases": [
+          "Padolang",
+          "padolang"
+        ],
+        "extensions": [
+          ".padoin"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "padolang",
+        "scopeName": "source.padolang",
+        "path": "./syntaxes/padolang.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "padolang.executar",
+        "title": "Executar arquivo",
+        "category": "Padolang",
+        "icon": "$(play)"
+      },
+      {
+        "command": "padolang.reiniciar",
+        "title": "Reiniciar o servidor",
+        "category": "Padolang"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "padolang.executar",
+          "when": "editorLangId == padolang"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "padolang.executar",
+          "when": "resourceLangId == padolang"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Padolang",
+      "properties": {
+        "padolang.java": {
+          "type": "string",
+          "default": "java",
+          "markdownDescription": "Comando do Java 21 ou mais novo (ex.: `/opt/jdk-21/bin/java`)."
+        },
+        "padolang.jar": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Caminho do `padolang.jar`. Vazio usa o jar que vem com a extensão. Aceita `${workspaceFolder}`, útil para usar o `out/padolang.jar` do repositório."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[padolang]": {
+        "editor.semanticHighlighting.enabled": true,
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p . && esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/extension.js --minify",
+    "watch": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/extension.js --sourcemap --watch",
+    "copiar-jar": "node scripts/copiar-jar.js",
+    "vscode:prepublish": "npm run compile && npm run copiar-jar",
+    "empacotar": "vsce package",
+    "test": "node testes/gramatica.js"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^10.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "~1.91.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  }
+}

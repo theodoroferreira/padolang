@@ -5,10 +5,17 @@ out/
 # Código C e executáveis gerados pelo padolang.sh
 saida/
 
+# Extensão VS Code: dependências, JS compilado, jar e licença copiados no empacotamento
+editores/vscode/node_modules/
+editores/vscode/out/
+editores/vscode/server/
+editores/vscode/LICENSE
+*.vsix
+
 # IDEs e editores
 .idea/
 *.iml
-.vscode/
+/.vscode/
 *.swp
 
 # Sistema operacional

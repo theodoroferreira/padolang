@@ -46,6 +46,26 @@ jobs:
       - name: Testar o servidor LSP
         run: ./testar-lsp.sh
 
+      - name: Instalar o Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: editores/vscode/package-lock.json
+
+      - name: Extensão VS Code (gramática e .vsix)
+        working-directory: editores/vscode
+        run: |
+          npm ci
+          npm test
+          npm run empacotar
+
+      - name: Guardar a extensão VS Code
+        uses: actions/upload-artifact@v4
+        with:
+          name: padolang-vsix
+          path: editores/vscode/*.vsix
+
       - name: Guardar o código C gerado
         if: always()
         uses: actions/upload-artifact@v4

@@ -94,6 +94,18 @@ Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os ed
 export PATH="$PWD/bin:$PATH"     # no ~/.bashrc ou ~/.zshrc, com o caminho completo
 ```
 
+### Extensão VS Code / Cursor (`editores/vscode/`)
+
+Cores (gramática TextMate e Semantic Tokens), erros sublinhados enquanto se digita, formatação (`Shift+Alt+F`) e o comando "Padolang: Executar arquivo", que roda o programa num terminal integrado com entrada pelo teclado. Precisa do Java 21. Para gerar e instalar:
+
+```bash
+./compilar.sh
+cd editores/vscode && npm install && npm run empacotar   # gera padolang-0.1.0.vsix, com o jar dentro
+code --install-extension padolang-0.1.0.vsix             # ou "Extensions: Install from VSIX..." no VS Code ou no Cursor
+```
+
+Detalhes e configurações em [`editores/vscode/README.md`](editores/vscode/README.md).
+
 ## A linguagem
 
 Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... }`, e as funções são declaradas antes do bloco principal. Quando uma escolha não é temática, a padolang segue o **Java**; as decisões estão registradas em [`docs/decisoes.md`](docs/decisoes.md).
@@ -213,7 +225,7 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_funcao` | função com dois parâmetros e condicional |
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
-A cada *push* ou *pull request* na `main`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh` e o `testar-cli.sh`. O C gerado fica disponível como artefato da execução.
+A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
 
 ## Estrutura do repositório
 
@@ -235,6 +247,7 @@ padolang/
 ├── exemplos/            programas de demonstração
 ├── docs/                decisões de projeto e regras semânticas
 ├── bin/                 lançadores da CLI (padolang, padolang.cmd)
+├── editores/vscode/     extensão VS Code / Cursor (gramática TextMate + cliente LSP)
 ├── compilar.sh          compila o transpilador e gera out/padolang.jar
 ├── padolang.sh          transpila, compila e executa um programa (atalho para bin/padolang run)
 ├── testar.sh            roda todos os testes e exemplos

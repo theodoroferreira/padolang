@@ -1,0 +1,98 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Padolang",
+  "scopeName": "source.padolang",
+  "fileTypes": ["padoin"],
+  "patterns": [
+    { "include": "#comentario" },
+    { "include": "#texto" },
+    { "include": "#numero" },
+    { "include": "#definicao-de-funcao" },
+    { "include": "#reservadas" },
+    { "include": "#chamada" },
+    { "include": "#joinha" },
+    { "include": "#operadores" },
+    { "include": "#pontuacao" },
+    { "include": "#identificador" }
+  ],
+  "repository": {
+    "comentario": {
+      "name": "comment.line.number-sign.padolang",
+      "match": "(#).*$",
+      "captures": {
+        "1": { "name": "punctuation.definition.comment.padolang" }
+      }
+    },
+    "texto": {
+      "name": "string.quoted.double.padolang",
+      "begin": "\"",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.padolang" }
+      },
+      "end": "(\")|$",
+      "endCaptures": {
+        "1": { "name": "punctuation.definition.string.end.padolang" }
+      },
+      "patterns": [
+        { "name": "constant.character.escape.padolang", "match": "\\\\[nt\"\\\\]" },
+        { "name": "invalid.illegal.escape.padolang", "match": "\\\\." }
+      ]
+    },
+    "numero": {
+      "patterns": [
+        { "name": "constant.numeric.float.padolang", "match": "\\b[0-9]+\\.[0-9]+\\b" },
+        { "name": "constant.numeric.integer.padolang", "match": "\\b[0-9]+\\b" }
+      ]
+    },
+    "definicao-de-funcao": {
+      "match": "\\b(padUNCTION)\\s+(padoINTER|padoFLOAT|padoOLEAN|padoSTRING)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b",
+      "captures": {
+        "1": { "name": "storage.type.function.padolang" },
+        "2": { "name": "storage.type.padolang" },
+        "3": { "name": "entity.name.function.padolang" }
+      }
+    },
+    "reservadas": {
+      "patterns": [
+        { "name": "storage.type.padolang", "match": "\\b(padoINTER|padoFLOAT|padoOLEAN|padoSTRING)\\b" },
+        { "name": "constant.language.boolean.padolang", "match": "\\b(padoTRUE|padoFALSE)\\b" },
+        { "name": "keyword.control.padolang", "match": "\\b(pad|oin|papapadoin|padoinquanto|padBREAK|padCONTINUE|padOUT)\\b" },
+        { "name": "storage.type.function.padolang", "match": "\\bpadUNCTION\\b" },
+        { "name": "keyword.other.padolang", "match": "\\b(PADOIN|padoin)\\b" },
+        { "name": "support.function.builtin.padolang", "match": "\\b(padoIN|padoPRINT|padoPRINTLN)\\b" },
+        { "name": "keyword.operator.word.padolang", "match": "\\b(padAND|padOR|padNOT|padoMOD)\\b" }
+      ]
+    },
+    "chamada": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()",
+      "captures": {
+        "1": { "name": "entity.name.function.padolang" }
+      }
+    },
+    "joinha": {
+      "name": "punctuation.terminator.statement.padolang",
+      "match": "\\x{1F44D}[\\x{1F3FB}-\\x{1F3FF}]?\\x{FE0F}?"
+    },
+    "operadores": {
+      "patterns": [
+        { "name": "keyword.operator.increment.padolang", "match": "\\+\\+|--" },
+        { "name": "keyword.operator.comparison.padolang", "match": "==|!=|<=|>=|<|>" },
+        { "name": "keyword.operator.assignment.padolang", "match": "=" },
+        { "name": "keyword.operator.arithmetic.padolang", "match": "[-+*/]" }
+      ]
+    },
+    "pontuacao": {
+      "patterns": [
+        { "name": "punctuation.separator.comma.padolang", "match": "," },
+        { "name": "punctuation.section.block.begin.padolang", "match": "\\{" },
+        { "name": "punctuation.section.block.end.padolang", "match": "\\}" },
+        { "name": "punctuation.section.parens.begin.padolang", "match": "\\(" },
+        { "name": "punctuation.section.parens.end.padolang", "match": "\\)" }
+      ]
+    },
+    "identificador": {
+      "name": "variable.other.padolang",
+      "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+    }
+  }
+}
