@@ -1,0 +1,29 @@
+padUNCTION padoINTER dobro(padoINTER n) {
+# <- keyword
+#          ^ type
+#                    ^ function
+#                          ^ type
+#                                    ^ variable.parameter
+  padOUT n * 2👍
+# ^ keyword
+#          ^ operator
+#            ^ number
+#             ^ punctuation.delimiter
+}
+
+PADOIN {
+# <- keyword
+  padoin padoOLEAN ok = padoTRUE👍
+# ^ keyword
+#                  ^ variable
+#                       ^ boolean
+  pad (ok padAND dobro(2) > 3) {
+# ^ keyword
+#         ^ keyword.operator
+#                ^ function
+    padoPRINTLN("sim\n")👍
+#   ^ function.builtin
+#               ^ string
+#                   ^ string.escape
+  }
+}

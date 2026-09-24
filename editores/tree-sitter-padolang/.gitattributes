@@ -1,0 +1,2 @@
+# Gerado pelo "tree-sitter generate": fica no git porque o Zed compila o parser a partir dele
+src/** linguist-generated

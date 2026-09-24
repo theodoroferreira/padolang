@@ -1,0 +1,174 @@
+================================================================================
+Programa com declaração, comentário e 👍 com tom de pele
+================================================================================
+
+# olá
+PADOIN {
+  padoin padoINTER x = 1👍🏽
+  padoPRINTLN("x = " + x)👍
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (comment)
+  (programa
+    corpo: (bloco
+      (declaracao
+        tipo: (tipo)
+        nome: (identificador))
+      (operador)
+      (numero)
+      (joinha)
+      (palavra_reservada)
+      (parenteses
+        (texto)
+        (operador)
+        (identificador))
+      (joinha))))
+
+================================================================================
+Função com parâmetros e chamada
+================================================================================
+
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+  padOUT a + b👍
+}
+
+PADOIN {
+  padoPRINTLN(soma(1, 2))👍
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (definicao_funcao
+    tipo: (tipo)
+    nome: (identificador)
+    parametros: (parenteses
+      (tipo)
+      (identificador)
+      (tipo)
+      (identificador))
+    corpo: (bloco
+      (palavra_reservada)
+      (identificador)
+      (operador)
+      (identificador)
+      (joinha)))
+  (programa
+    corpo: (bloco
+      (palavra_reservada)
+      (parenteses
+        (chamada
+          nome: (identificador)
+          argumentos: (parenteses
+            (numero)
+            (numero))))
+      (joinha))))
+
+================================================================================
+oin pad encadeado, operadores em palavra e conversão
+================================================================================
+
+PADOIN {
+  pad (padNOT ok padAND i padoMOD 2 == 1) {
+    x = padoINTER(3.5)👍
+  } oin pad (i <= -1) {
+    i++👍
+  } oin {
+    padBREAK👍
+  }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (programa
+    corpo: (bloco
+      (palavra_reservada)
+      (parenteses
+        (palavra_reservada)
+        (identificador)
+        (palavra_reservada)
+        (identificador)
+        (palavra_reservada)
+        (numero)
+        (operador)
+        (numero))
+      (bloco
+        (identificador)
+        (operador)
+        (tipo)
+        (parenteses
+          (numero))
+        (joinha))
+      (palavra_reservada)
+      (palavra_reservada)
+      (parenteses
+        (identificador)
+        (operador)
+        (operador)
+        (numero))
+      (bloco
+        (identificador)
+        (operador)
+        (joinha))
+      (palavra_reservada)
+      (bloco
+        (palavra_reservada)
+        (joinha)))))
+
+================================================================================
+Texto com escapes e # dentro do texto
+================================================================================
+
+PADOIN {
+  padoPRINT("a\tb # não é comentário \"ok\"\n")👍 # este é
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (programa
+    corpo: (bloco
+      (palavra_reservada)
+      (parenteses
+        (texto
+          (escape)
+          (escape)
+          (escape)
+          (escape)))
+      (joinha)
+      (comment))))
+
+================================================================================
+Palavras reservadas não são prefixo de identificador
+================================================================================
+
+PADOIN {
+  padoin padoOLEAN padoinquantoX = padoTRUE👍
+  padoinquanto (padoinquantoX) {
+    padoinquantoX = padoFALSE👍
+  }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (programa
+    corpo: (bloco
+      (declaracao
+        tipo: (tipo)
+        nome: (identificador))
+      (operador)
+      (booleano)
+      (joinha)
+      (palavra_reservada)
+      (parenteses
+        (identificador))
+      (bloco
+        (identificador)
+        (operador)
+        (booleano)
+        (joinha)))))
