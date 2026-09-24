@@ -1,0 +1,4 @@
+PADOIN {
+  padoin padoINTER ação = 1👍
+  padoPRINTLN("ação")👍
+}

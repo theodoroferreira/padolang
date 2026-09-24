@@ -31,6 +31,9 @@ jobs:
       - name: Rodar testes e exemplos
         run: ./testar.sh
 
+      - name: Testar o léxico no modo editor
+        run: ./testar-lexer-editor.sh
+
       - name: Guardar o código C gerado
         if: always()
         uses: actions/upload-artifact@v4

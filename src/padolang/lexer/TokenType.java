@@ -47,6 +47,10 @@ public enum TokenType {
     ABRE_PAR("'('"), FECHA_PAR("')'"), ABRE_CHAVE("'{'"), FECHA_CHAVE("'}'"),
     VIRGULA("','"), JOINHA("'👍'"),
 
+    // Só no modo editor (Lexer.Modo.EDITOR); o parser nunca os recebe
+    COMENTARIO("comentário"),
+    ERRO("trecho inválido"),
+
     EOF("fim do arquivo");
 
     private final String descricao;

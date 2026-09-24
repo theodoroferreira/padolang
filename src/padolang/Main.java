@@ -3,6 +3,7 @@ package padolang;
 import padolang.ast.AstPrinter;
 import padolang.ast.Programa;
 import padolang.diagnostico.CompilacaoException;
+import padolang.diagnostico.Diagnostico;
 import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
 import padolang.lexer.Token;
@@ -21,6 +22,10 @@ import java.util.List;
  * Transpilador Padolang -> C.
  *
  *   java -cp out padolang.Main <arquivo.padoin> [-o saida.c] [--tokens] [--ast]
+ *   java -cp out padolang.Main <arquivo.padoin> --tokens --editor
+ *
+ * Com "--tokens --editor" só roda o léxico, no modo do editor (comentários e trechos inválidos
+ * viram tokens), e lista os tokens com o tamanho e depois os erros léxicos. Não gera C.
  *
  * Pipeline: LÉXICO -> TOKENS -> PARSER -> AST -> SEMÂNTICA -> CÓDIGO C
  * Sem "-o", o C é gerado ao lado do fonte, com a extensão .c.
@@ -51,6 +56,10 @@ public class Main {
             err.println("padoERRO ao ler " + entrada + ": " + e.getMessage());
             System.exit(2);
             return;
+        }
+
+        if (opcoes.contains("--editor")) {
+            System.exit(tokensEditor(fonte, out));
         }
 
         try {
@@ -89,5 +98,20 @@ public class Main {
             err.println("padoERRO ao escrever " + saida + ": " + e.getMessage());
             System.exit(2);
         }
+    }
+
+    /** Lista os tokens do modo EDITOR e os erros léxicos; devolve 1 se houver algum erro. */
+    private static int tokensEditor(String fonte, PrintStream out) {
+        Lexer lexer = new Lexer(fonte, Lexer.Modo.EDITOR);
+        List<Token> tokens = lexer.tokenizar();
+        out.println("== TOKENS (editor) ==");
+        out.printf("%-5s %-5s %-4s %-13s %s%n", "LIN", "COL", "TAM", "TIPO", "LEXEMA");
+        for (Token t : tokens) {
+            out.printf("%-5d %-5d %-4d %-13s %s%n", t.linha(), t.coluna(), t.tamanho(), t.tipo(), t.lexema());
+        }
+        for (Diagnostico d : lexer.erros()) {
+            out.println(d.codigo() + " " + d.formatar());
+        }
+        return lexer.erros().isEmpty() ? 0 : 1;
     }
 }
