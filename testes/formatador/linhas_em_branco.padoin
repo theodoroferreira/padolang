@@ -1,0 +1,30 @@
+
+
+
+padUNCTION padoINTER um() {
+
+
+  padOUT 1👍
+
+
+}
+
+
+
+PADOIN {
+
+  padoin padoINTER x = um()👍
+
+
+
+  padoPRINTLN(x)👍
+  pad (x > 0) {
+
+    x--👍
+
+  }
+
+}
+
+
+

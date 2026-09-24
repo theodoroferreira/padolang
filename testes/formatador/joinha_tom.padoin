@@ -1,0 +1,6 @@
+PADOIN {
+  padoin padoINTER x = 1👍🏽
+  padoPRINTLN(x)👍️
+    x++👍🏿
+  padoPRINTLN(x)👍
+}

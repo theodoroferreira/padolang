@@ -40,6 +40,9 @@ jobs:
           bin/padolang check --json testes/05_erro_semantico_divisao_por_zero.padoin | grep -q '"codigo":"R14"'
           ./testar-cli.sh
 
+      - name: Testar o formatador
+        run: ./testar-formatador.sh
+
       - name: Guardar o código C gerado
         if: always()
         uses: actions/upload-artifact@v4

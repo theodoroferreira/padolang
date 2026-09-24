@@ -1,0 +1,9 @@
+PADOIN {
+  padoin padoINTER x = 5👍
+  pad (x < 0) { padoPRINTLN("negativo")👍 }
+  oin pad (x == 0) { padoPRINTLN("zero")👍 }
+  oin
+  {
+    pad (x > 3) {padoPRINTLN("grande")👍} oin {padoPRINTLN("pequeno")👍}
+  }
+}

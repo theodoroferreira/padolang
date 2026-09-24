@@ -1,0 +1,12 @@
+padUNCTION padoINTER neg(padoINTER v) {
+  padOUT -v👍
+}
+PADOIN {
+  padoin padoINTER x = -3👍
+  padoin padoINTER y = x - -1👍
+  padoin padoINTER z = - -x👍
+  padoin padoINTER w = x * -(y + 1) - neg(-2)👍
+  padoin padoOLEAN b = padNOT (x < -1) padOR -x > 0👍
+  padoPRINTLN(neg(x - y) + z + w)👍
+  padoPRINTLN(b)👍
+}

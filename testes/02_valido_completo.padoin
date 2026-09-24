@@ -1,6 +1,6 @@
 # condicional, repetição, entrada/saída, função e precedência
 padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
-    padOUT a + b👍
+  padOUT a + b👍
 }
 
 PADOIN {

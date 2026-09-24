@@ -4,6 +4,7 @@ import padolang.ast.AstPrinter;
 import padolang.ast.Programa;
 import padolang.diagnostico.CompilacaoException;
 import padolang.diagnostico.Diagnostico;
+import padolang.formatador.Formatador;
 import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
 import padolang.lexer.Token;
@@ -32,6 +33,8 @@ import java.util.Set;
  *   padolang build  <arquivo> [-o saida.c]  gera o C
  *   padolang run    <arquivo> [--manter | --dir pasta] [--tokens] [--ast]
  *                                           gera o C, compila com gcc e executa
+ *   padolang fmt    <arquivo...> [--check | --stdout]
+ *                                           formata os arquivos (no lugar, ou só confere, ou imprime)
  *   padolang tokens <arquivo> [--editor]    lista os tokens
  *   padolang ast    <arquivo>               mostra a árvore sintática
  *   padolang --help | --version
@@ -59,6 +62,9 @@ public class Cli {
                      --manter                guarda o .c e o executável em saida/ (senão, numa pasta temporária)
                      --dir <pasta>           guarda o .c e o executável nessa pasta
                      --tokens, --ast         mostra os tokens ou a árvore antes de executar
+              fmt    <arquivo...> [opções]   formata os arquivos, gravando no próprio arquivo
+                     --check                 só confere: sai com 1 se algum arquivo mudaria
+                     --stdout                só imprime o resultado, sem gravar
               tokens <arquivo> [--editor]    lista os tokens (--editor: comentários e erros também)
               ast    <arquivo>               mostra a árvore sintática
 
@@ -96,7 +102,8 @@ public class Cli {
             case "tokens" -> tokens(resto);
             case "ast" -> ast(resto);
             case "run" -> run(resto);
-            case "fmt", "lsp" -> {
+            case "fmt" -> fmt(resto);
+            case "lsp" -> {
                 err.println("padolang " + args[0] + ": ainda não implementado");
                 yield ERRO_USO;
             }
@@ -166,6 +173,75 @@ public class Cli {
             return ERRO_USO;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return ERRO_USO;
+        }
+    }
+
+    private int fmt(List<String> args) {
+        List<String> arquivos = new ArrayList<>();
+        boolean check = false, stdout = false;
+        for (String arg : args) {
+            switch (arg) {
+                case "--check" -> check = true;
+                case "--stdout" -> stdout = true;
+                default -> {
+                    if (arg.startsWith("-")) {
+                        err.println("padolang fmt: opção desconhecida: " + arg);
+                        return ERRO_USO;
+                    }
+                    arquivos.add(arg);
+                }
+            }
+        }
+        if (check && stdout) {
+            err.println("padolang fmt: use --check ou --stdout, não os dois");
+            return ERRO_USO;
+        }
+        if (arquivos.isEmpty()) {
+            err.println("padolang fmt: informe ao menos um arquivo .padoin");
+            return ERRO_USO;
+        }
+
+        int codigo = OK;
+        for (String arquivo : arquivos) {
+            codigo = Math.max(codigo, formatarArquivo(arquivo, check, stdout));
+        }
+        return codigo;
+    }
+
+    /** Formata um arquivo; devolve 1 se ele tem erro (ou, com --check, se mudaria) e 2 se não deu para ler ou gravar. */
+    private int formatarArquivo(String arquivo, boolean check, boolean stdout) {
+        String fonte = ler(arquivo);
+        if (fonte == null) return ERRO_USO;
+        String formatado;
+        try {
+            formatado = Formatador.formatar(fonte);
+        } catch (CompilacaoException e) {       // léxico ou sintático: o arquivo fica como está
+            err.println(arquivo + ": " + e.getMessage());
+            return ERRO_PROGRAMA;
+        } catch (IllegalStateException e) {     // a checagem de segurança do formatador falhou
+            err.println("padoERRO em " + arquivo + ": " + e.getMessage());
+            return ERRO_USO;
+        }
+
+        if (stdout) {
+            out.print(formatado);
+            out.flush();
+            return OK;
+        }
+        if (formatado.equals(fonte)) {
+            return OK;
+        }
+        if (check) {
+            err.println(arquivo + ": precisa ser formatado");
+            return ERRO_PROGRAMA;
+        }
+        try {
+            Files.writeString(Path.of(arquivo), formatado, StandardCharsets.UTF_8);
+            err.println(arquivo + ": formatado");
+            return OK;
+        } catch (IOException e) {
+            err.println("padoERRO ao escrever " + arquivo + ": " + e.getMessage());
             return ERRO_USO;
         }
     }
