@@ -1,0 +1,16 @@
+# Transpilador compilado (gerado pelo compilar.sh)
+out/
+*.class
+
+# Código C e executáveis gerados pelo padolang.sh
+saida/
+
+# IDEs e editores
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db

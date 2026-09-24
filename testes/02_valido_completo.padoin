@@ -1,0 +1,30 @@
+# condicional, repetição, entrada/saída, função e precedência
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+    padOUT a + b👍
+}
+
+PADOIN {
+  padoin padoINTER n👍
+  padoin padoINTER i👍
+  padoin padoFLOAT total = 0.0👍
+
+  padoPRINT("Quantas repeticoes? ")👍
+  padoIN(n)👍
+
+  papapadoin (i = 0, i < n, i++) {
+    total = total + 2 + 3 * 4👍
+  }
+
+  padoin padoINTER r = (2 + 3) * 4 - -1👍
+  padoin padoINTER s = soma(r, 10 / 2)👍
+
+  pad (total >= 50) {
+    padoPRINT("muito\n")👍
+  } oin pad (total > 0) {
+    padoPRINT("pouco\n")👍
+  } oin {
+    padoPRINT("nada\n")👍
+  }
+  padoPRINT(s)👍
+  padoPRINT("\n")👍
+}

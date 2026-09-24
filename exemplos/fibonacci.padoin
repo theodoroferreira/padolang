@@ -1,0 +1,16 @@
+# Os 15 primeiros números de Fibonacci
+PADOIN {
+  padoin padoINTER a = 0👍
+  padoin padoINTER b = 1👍
+  padoin padoINTER proximo👍
+  padoin padoINTER i👍
+
+  papapadoin (i = 0, i < 15, i++) {
+    padoPRINT(a)👍
+    padoPRINT(" ")👍
+    proximo = a + b👍
+    a = b👍
+    b = proximo👍
+  }
+  padoPRINT("\n")👍
+}

@@ -1,0 +1,48 @@
+# textos, lógicos, recursão, escopos e expressões difíceis
+padUNCTION padoINTER fat(padoINTER n) {
+  pad (n <= 1) {
+    padOUT 1👍
+  }
+  padOUT n * fat(n - 1)👍
+}
+
+padUNCTION padoSTRING saudacao(padoOLEAN formal) {
+  pad (formal == padoTRUE) {
+    padOUT "Prezado(a)"👍
+  }
+  padOUT "E ai"👍
+}
+
+PADOIN {
+  padoin padoSTRING nome👍
+  padoin padoOLEAN ok = padoFALSE👍
+  padoPRINT("Nome: ")👍
+  padoIN(nome)👍
+  pad (nome == "padoin") {
+    padoPRINT("nome reservado!\n")👍
+  } oin {
+    padoPRINT(saudacao(ok))👍
+    padoPRINT(", ")👍
+    padoPRINT(nome)👍
+    padoPRINT("\n")👍
+  }
+  padoPRINT(ok)👍
+  padoPRINT(" 100%\n")👍
+
+  padoin padoINTER int = 10 - (4 - 3) - -(-2)👍
+  padoPRINT(int)👍
+  padoPRINT(" ")👍
+  padoPRINT(fat(5))👍
+  padoPRINT(" ")👍
+  padoPRINT(7 / 2)👍
+  padoPRINT(" ")👍
+  padoPRINT(7.0 / 2)👍
+  padoPRINT("\n")👍
+
+  papapadoin (int = 3, int > 0, int--) {
+    padoin padoINTER dobro = int * 2👍
+    padoPRINT(dobro)👍
+    padoPRINT(" ")👍
+  }
+  padoPRINT("\n")👍
+}

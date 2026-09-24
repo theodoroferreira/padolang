@@ -1,0 +1,5 @@
+# declaração termina sem expressão após '='
+PADOIN {
+  padoin padoINTER x = 👍
+  padoPRINT(x)👍
+}

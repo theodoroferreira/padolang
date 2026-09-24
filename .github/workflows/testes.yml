@@ -1,0 +1,40 @@
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Versões das ferramentas
+        run: |
+          java -version
+          gcc --version
+
+      - name: Compilar o transpilador
+        run: ./compilar.sh
+
+      - name: Rodar testes e exemplos
+        run: ./testar.sh
+
+      - name: Guardar o código C gerado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codigo-c-gerado
+          path: saida/*.c
+          if-no-files-found: ignore

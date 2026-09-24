@@ -1,0 +1,13 @@
+# o léxico já reconhece todos os tokens de função
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+    padOUT a + b👍
+}
+
+PADOIN {
+  padoin padoINTER r = soma(2, 3 * 4)👍
+  pad (r >= 10) {
+    padoPRINT("grande\n")👍
+  } oin {
+    padoPRINT("pequeno\n")👍
+  }
+}

@@ -1,0 +1,11 @@
+# teste básico: declaração, atribuição e saída
+PADOIN {
+  padoin padoINTER x = 1👍
+  padoin padoFLOAT y = 2.5👍
+  x = x + 2 * 3👍
+  x++👍
+  padoPRINT(x)👍
+  padoPRINT("\n")👍
+  padoPRINT(y * 2)👍
+  padoPRINT("\nfim\n")👍
+}

@@ -1,0 +1,18 @@
+# Tabuada: lê um número e imprime a tabuada dele de 1 a 10
+PADOIN {
+  padoin padoINTER n👍
+  padoin padoINTER i👍
+
+  padoPRINT("Tabuada de qual número? ")👍
+  padoIN(n)👍
+  padoPRINT("\n")👍
+
+  papapadoin (i = 1, i <= 10, i++) {
+    padoPRINT(n)👍
+    padoPRINT(" x ")👍
+    padoPRINT(i)👍
+    padoPRINT(" = ")👍
+    padoPRINT(n * i)👍
+    padoPRINT("\n")👍
+  }
+}

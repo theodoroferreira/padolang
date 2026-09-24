@@ -1,0 +1,18 @@
+# Fatorial recursivo: uma função chamando a si mesma
+padUNCTION padoINTER fatorial(padoINTER n) {
+  pad (n <= 1) {
+    padOUT 1👍
+  }
+  padOUT n * fatorial(n - 1)👍
+}
+
+PADOIN {
+  padoin padoINTER i👍
+
+  papapadoin (i = 0, i <= 10, i++) {
+    padoPRINT(i)👍
+    padoPRINT("! = ")👍
+    padoPRINT(fatorial(i))👍
+    padoPRINT("\n")👍
+  }
+}
