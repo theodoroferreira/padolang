@@ -14,7 +14,7 @@ PADOIN {
 $ ./padolang.sh exemplo.padoin
 C gerado em saida/exemplo.c
 ---------- executando exemplo ----------
-14
+hello world
 ```
 
 ## Como funciona
