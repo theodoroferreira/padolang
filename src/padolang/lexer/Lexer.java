@@ -50,6 +50,7 @@ public class Lexer {
     private int pos = 0;
     private int linha = 1;
     private int coluna = 1;
+    private int inicio;   // índice em cp do primeiro code point do lexema atual
     private final List<Token> tokens = new ArrayList<>();
 
     public Lexer(String fonte) {
@@ -70,6 +71,7 @@ public class Lexer {
             }
 
             int l = linha, col = coluna; // posição de início do lexema
+            inicio = pos;
 
             if (c == '#') {
                 comentario();
@@ -85,7 +87,7 @@ public class Lexer {
                 operadorOuDelimitador(l, col);
             }
         }
-        tokens.add(new Token(TokenType.EOF, "<fim>", linha, coluna));
+        tokens.add(new Token(TokenType.EOF, "<fim>", linha, coluna, 0));
         return tokens;
     }
 
@@ -117,15 +119,21 @@ public class Lexer {
         if (!fim() && atual() == '.') {
             sb.appendCodePoint(avancar());
             if (fim() || !ehDigito(atual())) {
-                throw new LexicoException("número real malformado '" + sb + "' (esperado dígito após o ponto)", l, col);
+                throw new LexicoException("L1", "número real malformado '" + sb + "' (esperado dígito após o ponto)",
+                        l, col, pos - inicio);
             }
             lerDigitos(sb);
             tipo = TokenType.NUM_FLOAT;
         }
 
         if (!fim() && ehLetra(atual())) {
-            throw new LexicoException("lexema inválido '" + sb + Character.toString(atual())
-                    + "...' (identificadores não podem começar com dígito)", l, col);
+            // O trecho apontado vai até o fim do "identificador" (ex.: 2x inteiro)
+            int fimTrecho = pos;
+            while (fimTrecho < cp.length && (ehLetra(cp[fimTrecho]) || ehDigito(cp[fimTrecho]))) {
+                fimTrecho++;
+            }
+            throw new LexicoException("L2", "lexema inválido '" + sb + Character.toString(atual())
+                    + "...' (identificadores não podem começar com dígito)", l, col, fimTrecho - inicio);
         }
         emitir(tipo, sb.toString(), l, col);
     }
@@ -137,7 +145,7 @@ public class Lexer {
 
         while (true) {
             if (fim() || atual() == '\n') {
-                throw new LexicoException("string não fechada", l, col);
+                throw new LexicoException("L3", "string não fechada", l, col, pos - inicio);
             }
             int c = avancar();
             if (c == '"') {
@@ -146,7 +154,8 @@ public class Lexer {
             }
             if (c == '\\') {
                 if (fim() || "nt\"\\".indexOf(atual()) < 0) {
-                    throw new LexicoException("sequência de escape inválida na string", linha, coluna - 1);
+                    throw new LexicoException("L4", "sequência de escape inválida na string", linha, coluna - 1,
+                            fim() ? 1 : 2);
                 }
                 sb.append('\\').appendCodePoint(avancar());
             } else {
@@ -181,7 +190,7 @@ public class Lexer {
             case '>' -> emitir(casar('=') ? TokenType.MAIOR_IGUAL : TokenType.MAIOR, l, col);
             case '!' -> {
                 if (!casar('=')) {
-                    throw new LexicoException("'!' isolado não é um operador válido (use !=)", l, col);
+                    throw new LexicoException("L5", "'!' isolado não é um operador válido (use !=)", l, col, 1);
                 }
                 emitir(TokenType.DIFERENTE, l, col);
             }
@@ -190,8 +199,8 @@ public class Lexer {
             case '{' -> emitir(TokenType.ABRE_CHAVE, l, col);
             case '}' -> emitir(TokenType.FECHA_CHAVE, l, col);
             case ',' -> emitir(TokenType.VIRGULA, l, col);
-            default -> throw new LexicoException(
-                    "caractere inválido '" + Character.toString(c) + "' (U+" + String.format("%04X", c) + ")", l, col);
+            default -> throw new LexicoException("L6",
+                    "caractere inválido '" + Character.toString(c) + "' (U+" + String.format("%04X", c) + ")", l, col, 1);
         }
     }
 
@@ -237,7 +246,7 @@ public class Lexer {
     }
 
     private void emitir(TokenType tipo, String lexema, int l, int col) {
-        tokens.add(new Token(tipo, lexema, l, col));
+        tokens.add(new Token(tipo, lexema, l, col, pos - inicio));
     }
 
     /** Para operadores/delimitadores o lexema é recuperado do próprio fonte. */

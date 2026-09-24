@@ -2,15 +2,13 @@ package padolang;
 
 import padolang.ast.AstPrinter;
 import padolang.ast.Programa;
+import padolang.diagnostico.CompilacaoException;
 import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
-import padolang.lexer.LexicoException;
 import padolang.lexer.Token;
 import padolang.parser.Parser;
-import padolang.parser.SintaticoException;
 import padolang.semantica.AnalisadorSemantico;
 import padolang.semantica.Anotacoes;
-import padolang.semantica.SemanticoException;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -84,7 +82,7 @@ public class Main {
             Files.writeString(saida, codigoC, StandardCharsets.UTF_8);
             err.println("C gerado em " + saida);
 
-        } catch (LexicoException | SintaticoException | SemanticoException e) {
+        } catch (CompilacaoException e) {   // léxico, sintático ou semântico
             err.println(e.getMessage());
             System.exit(1);
         } catch (IOException e) {

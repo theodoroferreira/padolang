@@ -1,5 +1,8 @@
 package padolang.semantica;
 
+import padolang.diagnostico.CompilacaoException;
+import padolang.diagnostico.Diagnostico;
+
 import java.util.List;
 
 /**
@@ -9,9 +12,9 @@ import java.util.List;
  * Ao contrário do léxico e do sintático, que param no primeiro erro, a semântica percorre o
  * programa inteiro e junta todos os erros. Cada um vira uma linha da mensagem.
  */
-public class SemanticoException extends RuntimeException {
+public class SemanticoException extends CompilacaoException {
 
-    public SemanticoException(List<String> erros) {
-        super(String.join(System.lineSeparator(), erros));
+    public SemanticoException(List<Diagnostico> erros) {
+        super(erros);
     }
 }
