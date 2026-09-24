@@ -98,7 +98,7 @@ padUNCTION padoINTER sinal(padoINTER n) {
 - **`padoFLOAT` → `padoINTER` é erro (R5).** Em C a conversão é implícita e trunca em silêncio, então `padoin padoINTER n = 7.5👍` guardaria 7. Proibir torna a perda de informação visível; o caminho contrário, `padoINTER` → `padoFLOAT`, não perde nada e é permitido.
 - **Sem sombreamento (R2).** Como em Java, não se pode declarar dentro de um bloco um nome que já existe fora dele. Isso evita o erro clássico de achar que se está alterando a variável de fora. Blocos irmãos continuam podendo repetir nomes.
 - **Sem variáveis globais.** Funções só enxergam os próprios parâmetros e variáveis; dados do `PADOIN` entram por parâmetro.
-- **Todos os erros de uma vez.** O léxico e o sintático param no primeiro erro, porque depois dele os tokens seguintes perdem o sentido. A semântica trabalha sobre uma AST completa e pode continuar, então reúne todos os erros e mostra um por linha, na forma `Erro semântico (linha N): ...`. Quando uma expressão já tem erro, o tipo dela vira "desconhecido" e as verificações que dependem dela são puladas, o que evita uma cascata de mensagens a partir de um único engano.
+- **Todos os erros de uma vez.** O léxico e o sintático param no primeiro erro, porque depois dele os tokens seguintes perdem o sentido. A semântica trabalha sobre uma AST completa e pode continuar, então reúne todos os erros e mostra um por linha, na forma `padoERRO semântico (linha N): ...`. Quando uma expressão já tem erro, o tipo dela vira "desconhecido" e as verificações que dependem dela são puladas, o que evita uma cascata de mensagens a partir de um único engano.
 
 ## Relação com o gerador
 

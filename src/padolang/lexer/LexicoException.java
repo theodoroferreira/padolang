@@ -6,7 +6,7 @@ public class LexicoException extends RuntimeException {
     private final int coluna;
 
     public LexicoException(String mensagem, int linha, int coluna) {
-        super(String.format("Erro léxico (linha %d, coluna %d): %s", linha, coluna, mensagem));
+        super(String.format("padoERRO léxico (linha %d, coluna %d): %s", linha, coluna, mensagem));
         this.linha = linha;
         this.coluna = coluna;
     }

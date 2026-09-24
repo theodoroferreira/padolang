@@ -6,7 +6,7 @@
 #
 # Regras:
 #   - arquivos com "erro" no nome precisam ser REJEITADOS pelo transpilador, com uma
-#     mensagem que começa com "Erro". Se o arquivo tiver uma linha
+#     mensagem que começa com "padoERRO". Se o arquivo tiver uma linha
 #     "# espera-erro: <trecho>", a mensagem também precisa conter esse trecho
 #     (assim o teste confere que o erro certo foi apontado, não um erro qualquer);
 #   - os demais precisam transpilar, compilar com gcc e executar sem falha;
@@ -34,8 +34,8 @@ for f in testes/*.padoin exemplos/*.padoin; do
     esperado="$(sed -n 's/^#[[:space:]]*espera-erro:[[:space:]]*//p' "$f" | head -n 1)"
     if [ $codigo -eq 0 ]; then
       motivo="deveria ter sido rejeitado, mas foi aceito"
-    elif ! grep -q '^Erro' <<< "$msg"; then
-      motivo="a mensagem não começa com \"Erro\""
+    elif ! grep -q '^padoERRO' <<< "$msg"; then
+      motivo="a mensagem não começa com \"padoERRO\""
     elif [ -n "$esperado" ] && ! grep -qF -- "$esperado" <<< "$msg"; then
       motivo="esperava a mensagem conter: $esperado"
     else

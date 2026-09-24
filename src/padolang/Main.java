@@ -49,7 +49,7 @@ public class Main {
         try {
             fonte = Files.readString(entrada, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            err.println("Erro ao ler " + entrada + ": " + e.getMessage());
+            err.println("padoERRO ao ler " + entrada + ": " + e.getMessage());
             System.exit(2);
             return;
         }
@@ -87,7 +87,7 @@ public class Main {
             err.println(e.getMessage());
             System.exit(1);
         } catch (IOException e) {
-            err.println("Erro ao escrever " + saida + ": " + e.getMessage());
+            err.println("padoERRO ao escrever " + saida + ": " + e.getMessage());
             System.exit(2);
         }
     }

@@ -377,6 +377,6 @@ public final class AnalisadorSemantico {
     // ------------------------------------------------------------ erros
 
     private void erro(int linha, String formato, Object... args) {
-        erros.add(String.format("Erro semântico (linha %d): %s", linha, String.format(formato, args)));
+        erros.add(String.format("padoERRO semântico (linha %d): %s", linha, String.format(formato, args)));
     }
 }

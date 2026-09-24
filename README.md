@@ -130,7 +130,7 @@ A semântica mostra todos os erros encontrados, um por linha.
 
 O script roda todos os programas de `testes/` e `exemplos/`:
 
-- arquivos com `erro` no nome **devem ser rejeitados** pelo transpilador, com mensagem que começa com `Erro`; se o arquivo tiver uma linha `# espera-erro: <trecho>`, a mensagem precisa conter esse trecho, o que garante que o erro apontado é o certo;
+- arquivos com `erro` no nome **devem ser rejeitados** pelo transpilador, com mensagem que começa com `padoERRO`; se o arquivo tiver uma linha `# espera-erro: <trecho>`, a mensagem precisa conter esse trecho, o que garante que o erro apontado é o certo;
 - os demais devem transpilar, compilar e executar sem falha;
 - se existir um `<nome>.entrada` ao lado do `.padoin`, ele é usado como entrada do programa.
 
