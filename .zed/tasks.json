@@ -1,0 +1,45 @@
+// Tarefas do Zed para este repositório ("task: spawn", ou o botão ▶ ao lado do PADOIN).
+// Usam o lançador bin/padolang, que recompila o transpilador se algum .java mudou.
+[
+  {
+    "label": "padolang: executar $ZED_FILENAME",
+    "command": "bin/padolang",
+    "args": ["run", "$ZED_FILE"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["padolang-programa"],
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always"
+  },
+  {
+    "label": "padolang: conferir $ZED_FILENAME",
+    "command": "bin/padolang",
+    "args": ["check", "$ZED_FILE"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["padolang-programa"]
+  },
+  {
+    "label": "padolang: gerar C de $ZED_FILENAME",
+    "command": "bin/padolang",
+    "args": ["build", "$ZED_FILE", "-o", "saida/$ZED_STEM.c"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "tags": ["padolang-programa"]
+  },
+  {
+    "label": "padolang: formatar $ZED_FILENAME",
+    "command": "bin/padolang",
+    "args": ["fmt", "$ZED_FILE"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus"
+  },
+  {
+    "label": "padolang: testar tudo",
+    "command": "./testar.sh",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  },
+  {
+    "label": "padolang: testar ferramentas (CLI, formatador, LSP, Zed)",
+    "command": "./testar-cli.sh && ./testar-formatador.sh && ./testar-lsp.sh && ./testar-zed.sh",
+    "cwd": "$ZED_WORKTREE_ROOT"
+  }
+]

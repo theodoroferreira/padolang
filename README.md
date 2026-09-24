@@ -106,6 +106,12 @@ code --install-extension padolang-0.1.0.vsix             # ou "Extensions: Insta
 
 Detalhes e configurações em [`editores/vscode/README.md`](editores/vscode/README.md).
 
+### Extensão Zed (`editores/zed/`)
+
+Registra a linguagem "Padolang" no Zed (gramática Tree-sitter em `editores/tree-sitter-padolang/`) e inicia o `padolang lsp`: cores por Semantic Tokens, erros sublinhados e formatação ao salvar. Precisa do Java 21, do `bin/` no `PATH` (ou do repositório da padolang aberto no Zed) e do Rust instalado pelo [rustup](https://rustup.rs), porque o Zed compila a extensão. Para instalar, no Zed: "zed: install dev extension" e escolher a pasta `editores/zed/`.
+
+Com este repositório aberto, o `.zed/settings.json` liga as cores do LSP (`"semantic_tokens": "full"`) e a formatação ao salvar, e o `.zed/tasks.json` traz as tarefas "padolang: executar", "conferir", "gerar C", "formatar" e "testar" ("task: spawn", ou o botão ▶ ao lado do `PADOIN`). Detalhes em [`editores/zed/README.md`](editores/zed/README.md).
+
 ## A linguagem
 
 Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... }`, e as funções são declaradas antes do bloco principal. Quando uma escolha não é temática, a padolang segue o **Java**; as decisões estão registradas em [`docs/decisoes.md`](docs/decisoes.md).
@@ -225,7 +231,7 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_funcao` | função com dois parâmetros e condicional |
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
-A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
+A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão VS Code e empacota o `.vsix`, e roda o `testar-zed.sh` (gramática Tree-sitter, queries e compilação da extensão do Zed). O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
 
 ## Estrutura do repositório
 
@@ -248,12 +254,16 @@ padolang/
 ├── docs/                decisões de projeto e regras semânticas
 ├── bin/                 lançadores da CLI (padolang, padolang.cmd)
 ├── editores/vscode/     extensão VS Code / Cursor (gramática TextMate + cliente LSP)
+├── editores/tree-sitter-padolang/  gramática Tree-sitter mínima (exigida pelo Zed)
+├── editores/zed/        extensão Zed (queries + lançador do LSP em Rust)
+├── .zed/                configurações e tarefas do Zed para este repositório
 ├── compilar.sh          compila o transpilador e gera out/padolang.jar
 ├── padolang.sh          transpila, compila e executa um programa (atalho para bin/padolang run)
 ├── testar.sh            roda todos os testes e exemplos
 ├── testar-lexer-editor.sh  confere o léxico no modo editor
 ├── testar-formatador.sh confere o formatador (testes/formatador/, idempotência, comportamento)
 ├── testar-lsp.sh        confere o servidor LSP com a sessão gravada em testes/lsp/
+├── testar-zed.sh        confere a gramática Tree-sitter e a extensão do Zed
 └── testar-cli.sh        confere a CLI (subcomandos, --json, run e códigos de saída)
 ```
 

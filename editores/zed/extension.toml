@@ -1,0 +1,20 @@
+id = "padolang"
+name = "Padolang"
+description = "Suporte à padolang👍: cores, erros, formatação e tarefas para arquivos .padoin"
+version = "0.1.0"
+schema_version = 1
+authors = ["Theodoro Ferreira <theogferreira@outlook.com>"]
+repository = "https://github.com/theodoroferreira/padolang"
+
+# O Zed baixa a gramática com git (fetch do rev e checkout) e compila o src/parser.c da pasta path.
+# O rev precisa ser um commit que já está no GitHub e que tem a gramática atual (o testar-zed.sh confere).
+# Com o repositório privado, o git precisa de credenciais para https; para desenvolver sem elas,
+# troque localmente o repository por "file:///caminho/do/padolang" (sem commitar a troca).
+[grammars.padolang]
+repository = "https://github.com/theodoroferreira/padolang"
+rev = "fea1ba73045c78b88bfd2cb1ad9b405ecc19fe84"
+path = "editores/tree-sitter-padolang"
+
+[language_servers.padolang-lsp]
+name = "Padolang LSP"
+languages = ["Padolang"]
