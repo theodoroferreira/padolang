@@ -65,6 +65,26 @@ Para só gerar o C, sem compilar nem executar:
 java -cp out padolang.Main arquivo.padoin -o saida.c
 ```
 
+### CLI (`bin/padolang`)
+
+O `compilar.sh` também empacota o transpilador em `out/padolang.jar`. O `bin/padolang` (ou `bin/padolang.cmd`, no Windows) chama esse jar e o recompila sozinho se algum `.java` mudou:
+
+```bash
+bin/padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar C
+bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
+bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens
+bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
+bin/padolang --help | --version
+```
+
+O `check --json` imprime os erros com fase, código (`L1`..`L6`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+
+Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os editores vão achar a padolang):
+
+```bash
+export PATH="$PWD/bin:$PATH"     # no ~/.bashrc ou ~/.zshrc, com o caminho completo
+```
+
 ## A linguagem
 
 Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... }`, e as funções são declaradas antes do bloco principal. Quando uma escolha não é temática, a padolang segue o **Java**; as decisões estão registradas em [`docs/decisoes.md`](docs/decisoes.md).
@@ -184,7 +204,7 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_funcao` | função com dois parâmetros e condicional |
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
-A cada *push* ou *pull request* na `main`, o GitHub Actions compila o projeto e roda o `testar.sh`. O C gerado fica disponível como artefato da execução.
+A cada *push* ou *pull request* na `main`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh` e o `testar-cli.sh`. O C gerado fica disponível como artefato da execução.
 
 ## Estrutura do repositório
 
@@ -196,13 +216,18 @@ padolang/
 │   ├── ast/
 │   ├── semantica/
 │   ├── gerador/
+│   ├── diagnostico/     erros estruturados (fase, código, posição, tamanho)
+│   ├── cli/             subcomandos da linha de comando
 │   └── Main.java
 ├── testes/              suíte obrigatória (válidos e inválidos)
 ├── exemplos/            programas de demonstração
 ├── docs/                decisões de projeto e regras semânticas
-├── compilar.sh          compila o transpilador
+├── bin/                 lançadores da CLI (padolang, padolang.cmd)
+├── compilar.sh          compila o transpilador e gera out/padolang.jar
 ├── padolang.sh          transpila, compila e executa um programa
-└── testar.sh            roda todos os testes e exemplos
+├── testar.sh            roda todos os testes e exemplos
+├── testar-lexer-editor.sh  confere o léxico no modo editor
+└── testar-cli.sh        confere a CLI (subcomandos, --json e códigos de saída)
 ```
 
 ## Integrantes
