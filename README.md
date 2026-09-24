@@ -1,6 +1,6 @@
-# padolang 👍
+# padolang👍
 
-**padolang** é uma linguagem de programação orientada a edson luiz padoin, com palavras reservadas construídas a partir de *pad*, *pado* e *padoin* e com o 👍 no lugar do ponto e vírgula. O repositório contém o **transpilador padolang → C**, escrito em Java.
+**padolang** é uma linguagem de programação orientada a Edson Luiz Padoin (GOAT), com palavras reservadas construídas a partir de *pad*, *pado* e *padoin* e com o 👍 no lugar do ponto e vírgula. O repositório contém o **transpilador padolang → C**, escrito em Java.
 
 ```
 PADOIN {
@@ -46,7 +46,7 @@ sudo apt install openjdk-21-jdk gcc
 ## Compilação e execução
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/theodoroferreira/padolang.git
 cd padolang
 
 ./compilar.sh                                  # compila o transpilador em out/
@@ -91,7 +91,7 @@ Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... 
 |---|---|---|
 | `padoINTER` | `int` | `42` |
 | `padoFLOAT` | `double` | `3.14` |
-| `padoOLEAN` | `bool` | `padoSIM`, `padoNAO` |
+| `padoOLEAN` | `bool` | `padoTRUE`, `padoFALSE` |
 | `padoSTRING` | `char *` | `"texto\n"` (escapes `\n`, `\t`, `\"`, `\\`) |
 
 ### Operadores
