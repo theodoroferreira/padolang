@@ -2,8 +2,10 @@
 //
 // As cores básicas vêm da gramática TextMate (syntaxes/), que funciona mesmo sem Java.
 // Diagnósticos, cores semânticas e formatação vêm do servidor LSP: "java -jar padolang.jar lsp".
-// O comando "Padolang: Executar arquivo" roda "java -jar padolang.jar run <arquivo>" num terminal
-// integrado (e não no painel Output) porque o padoIN lê do teclado.
+// O comando "Padolang: Executar arquivo" roda "java -jar padolang.jar run <arquivo>" como uma task:
+// ela abre um terminal integrado de verdade (o padoIN lê do teclado, e o printf do C sem buffer de
+// pipe), e, ao contrário de um terminal criado com createTerminal, a saída continua na tela depois
+// que o programa termina.
 
 import * as fs from "fs";
 import * as path from "path";
@@ -11,7 +13,6 @@ import * as vscode from "vscode";
 import { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient/node";
 
 let cliente: LanguageClient | undefined;
-let terminal: vscode.Terminal | undefined;
 
 export async function activate(contexto: vscode.ExtensionContext): Promise<void> {
   contexto.subscriptions.push(
@@ -20,11 +21,6 @@ export async function activate(contexto: vscode.ExtensionContext): Promise<void>
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("padolang.java") || e.affectsConfiguration("padolang.jar")) {
         reiniciar(contexto);
-      }
-    }),
-    vscode.window.onDidCloseTerminal((t) => {
-      if (t === terminal) {
-        terminal = undefined;
       }
     }),
   );
@@ -102,16 +98,51 @@ async function executar(contexto: vscode.ExtensionContext, uri?: vscode.Uri): Pr
     return;
   }
 
-  // Uma execução por vez: rodar de novo fecha a anterior (que pode estar esperando um padoIN)
-  terminal?.dispose();
+  // Uma execução por vez: rodar de novo encerra a anterior (que pode estar esperando um padoIN)
+  await encerrarExecucoes();
+
   const arquivo = documento.uri.fsPath;
-  terminal = vscode.window.createTerminal({
-    name: `padolang: ${path.basename(arquivo)}`,
-    shellPath: comandoJava(),
-    shellArgs: ["-jar", jar, "run", arquivo],
-    cwd: path.dirname(arquivo),
+  const pasta = vscode.workspace.getWorkspaceFolder(documento.uri) ?? vscode.TaskScope.Workspace;
+  const tarefa = new vscode.Task(
+    { type: "padolang", arquivo },
+    pasta,
+    `executar ${path.basename(arquivo)}`,
+    "padolang",
+    new vscode.ProcessExecution(comandoJava(), ["-jar", jar, "run", arquivo], { cwd: path.dirname(arquivo) }),
+    [],
+  );
+  tarefa.presentationOptions = {
+    reveal: vscode.TaskRevealKind.Always,
+    focus: true, // o teclado vai direto para o terminal, pronto para o padoIN
+    panel: vscode.TaskPanelKind.Dedicated,
+    clear: true,
+    echo: false,
+    showReuseMessage: true,
+  };
+  await vscode.tasks.executeTask(tarefa);
+}
+
+/** Encerra as execuções da padolang em andamento e espera cada uma terminar (no máximo 3 s). */
+async function encerrarExecucoes(): Promise<void> {
+  const ativas = vscode.tasks.taskExecutions.filter((e) => e.task.definition.type === "padolang");
+  if (ativas.length === 0) {
+    return;
+  }
+  const fim = new Promise<void>((resolve) => {
+    let restantes = ativas.length;
+    const escuta = vscode.tasks.onDidEndTask((e) => {
+      if (ativas.includes(e.execution) && --restantes === 0) {
+        escuta.dispose();
+        resolve();
+      }
+    });
+    setTimeout(() => {
+      escuta.dispose();
+      resolve();
+    }, 3000);
   });
-  terminal.show();
+  ativas.forEach((e) => e.terminate());
+  await fim;
 }
 
 // ------------------------------------------------------------------ configuração

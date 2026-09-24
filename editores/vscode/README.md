@@ -8,7 +8,7 @@ Suporte aos arquivos `.padoin` da [padolang👍](https://github.com/theodoroferr
   ```json
   "[padolang]": { "editor.formatOnSave": true }
   ```
-- **executar**: "Padolang: Executar arquivo" (paleta de comandos ou o botão ▷ no canto do editor) salva o arquivo e roda `padolang run` num terminal integrado, onde o `padoIN` lê do teclado.
+- **executar**: "Padolang: Executar arquivo" (paleta de comandos ou o botão ▷ no canto do editor) salva o arquivo e roda `padolang run` como uma task, num terminal integrado: o `padoIN` lê do teclado e a saída continua na tela depois que o programa termina. Rodar de novo encerra a execução anterior.
 
 ## Requisitos
 
@@ -37,6 +37,7 @@ npm run empacotar              # compila, copia o jar para server/ e gera padola
 
 - **VS Code:** "Extensions: Install from VSIX..." e escolher o `padolang-0.1.0.vsix`, ou `code --install-extension padolang-0.1.0.vsix`.
 - **Cursor:** o mesmo `.vsix`, pelo mesmo comando ("Extensions: Install from VSIX...") ou `cursor --install-extension padolang-0.1.0.vsix`.
+- **Outros forks do VS Code** (Antigravity, Windsurf, VSCodium): o mesmo `.vsix`, pelo "Install from VSIX..." ou pelo comando do próprio editor (ex.: `antigravity-ide --install-extension`). O `code --install-extension` instala só no VS Code.
 
 ## Desenvolvimento
 
