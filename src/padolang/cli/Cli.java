@@ -8,6 +8,7 @@ import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
 import padolang.lexer.Token;
 import padolang.parser.Parser;
+import padolang.runner.Runner;
 import padolang.semantica.AnalisadorSemantico;
 import padolang.semantica.Anotacoes;
 
@@ -29,6 +30,8 @@ import java.util.Set;
  *
  *   padolang check  <arquivo> [--json]      léxico + sintático + semântico, sem gerar C
  *   padolang build  <arquivo> [-o saida.c]  gera o C
+ *   padolang run    <arquivo> [--manter | --dir pasta] [--tokens] [--ast]
+ *                                           gera o C, compila com gcc e executa
  *   padolang tokens <arquivo> [--editor]    lista os tokens
  *   padolang ast    <arquivo>               mostra a árvore sintática
  *   padolang --help | --version
@@ -52,6 +55,10 @@ public class Cli {
             Comandos:
               check  <arquivo> [--json]      confere o programa (léxico, sintático e semântico), sem gerar C
               build  <arquivo> [-o saida.c]  gera o C (sem -o, ao lado do fonte, com a extensão .c)
+              run    <arquivo> [opções]      gera o C, compila (PADOLANG_CC, gcc ou cc) e executa
+                     --manter                guarda o .c e o executável em saida/ (senão, numa pasta temporária)
+                     --dir <pasta>           guarda o .c e o executável nessa pasta
+                     --tokens, --ast         mostra os tokens ou a árvore antes de executar
               tokens <arquivo> [--editor]    lista os tokens (--editor: comentários e erros também)
               ast    <arquivo>               mostra a árvore sintática
 
@@ -60,7 +67,8 @@ public class Cli {
               -v, --version    mostra a versão
 
             Forma antiga, ainda aceita: padolang <arquivo.padoin> [-o saida.c] [--tokens] [--ast]
-            Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.""";
+            Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+            No run, o código de saída é o do programa (1 em erro de execução).""";
 
     private final PrintStream out;
     private final PrintStream err;
@@ -87,7 +95,8 @@ public class Cli {
             case "build" -> build(resto);
             case "tokens" -> tokens(resto);
             case "ast" -> ast(resto);
-            case "run", "fmt", "lsp" -> {
+            case "run" -> run(resto);
+            case "fmt", "lsp" -> {
                 err.println("padolang " + args[0] + ": ainda não implementado");
                 yield ERRO_USO;
             }
@@ -129,7 +138,36 @@ public class Cli {
         Argumentos a = Argumentos.ler("build", args, Set.of(), Set.of("-o"), err);
         if (a == null) return ERRO_USO;
         Path saida = a.valores.containsKey("-o") ? Path.of(a.valores.get("-o")) : saidaPadrao(a.arquivo);
-        return compilar(a.arquivo, saida, false, false);
+        return compilar(a.arquivo, saida, false, false, true);
+    }
+
+    private int run(List<String> args) {
+        Argumentos a = Argumentos.ler("run", args, Set.of("--manter", "--tokens", "--ast"), Set.of("--dir"), err);
+        if (a == null) return ERRO_USO;
+        String nome = Path.of(a.arquivo).getFileName().toString().replaceAll("\\.padoin$", "");
+        boolean manter = a.flags.contains("--manter") || a.valores.containsKey("--dir");
+        try {
+            Path pasta = a.valores.containsKey("--dir") ? Path.of(a.valores.get("--dir"))
+                    : manter ? Path.of("saida")
+                    : Files.createTempDirectory("padolang");
+            Path codigoC = pasta.resolve(nome + ".c");
+            if (!manter) {
+                // apagados quando a JVM encerra, inclusive por Ctrl+C ou timeout (a pasta por último)
+                pasta.toFile().deleteOnExit();
+                codigoC.toFile().deleteOnExit();
+                Runner.executavelPara(codigoC).toFile().deleteOnExit();
+            }
+            int transpilacao = compilar(a.arquivo, codigoC,
+                    a.flags.contains("--tokens"), a.flags.contains("--ast"), manter);
+            if (transpilacao != OK) return transpilacao;
+            return new Runner(err).compilarEExecutar(codigoC, nome);
+        } catch (IOException e) {
+            err.println("padoERRO ao executar " + a.arquivo + ": " + e.getMessage());
+            return ERRO_USO;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ERRO_USO;
+        }
     }
 
     private int tokens(List<String> args) {
@@ -175,13 +213,14 @@ public class Cli {
             String fonte = ler(args[0]);
             return fonte == null ? ERRO_USO : tokensEditor(fonte);
         }
-        return compilar(args[0], saida, opcoes.contains("--tokens"), opcoes.contains("--ast"));
+        return compilar(args[0], saida, opcoes.contains("--tokens"), opcoes.contains("--ast"), true);
     }
 
     // ------------------------------------------------------------------ pipeline
 
-    /** LÉXICO -> TOKENS -> PARSER -> AST -> SEMÂNTICA -> CÓDIGO C, gravado em saida. */
-    private int compilar(String arquivo, Path saida, boolean mostrarTokens, boolean mostrarAst) {
+    /** LÉXICO -> TOKENS -> PARSER -> AST -> SEMÂNTICA -> CÓDIGO C, gravado em saida.
+     *  Com avisar, mostra no stderr onde o C foi gravado. */
+    private int compilar(String arquivo, Path saida, boolean mostrarTokens, boolean mostrarAst, boolean avisar) {
         String fonte = ler(arquivo);
         if (fonte == null) return ERRO_USO;
         try {
@@ -199,7 +238,7 @@ public class Cli {
                 Files.createDirectories(saida.getParent());
             }
             Files.writeString(saida, codigoC, StandardCharsets.UTF_8);
-            err.println("C gerado em " + saida);
+            if (avisar) err.println("C gerado em " + saida);
             return OK;
         } catch (CompilacaoException e) {   // léxico, sintático ou semântico
             err.println(e.getMessage());

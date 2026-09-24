@@ -52,7 +52,7 @@ cd padolang
 ./padolang.sh exemplos/tabuada.padoin          # transpila, compila e executa
 ```
 
-O `padolang.sh` recompila o transpilador se algum `.java` mudou, gera `saida/<nome>.c`, compila com `gcc -std=c11 -fwrapv` e executa o programa. Opções:
+O `padolang.sh` é um atalho para `bin/padolang run --dir saida` (ver abaixo): recompila o transpilador se algum `.java` mudou, gera `saida/<nome>.c`, compila com `gcc -std=c11 -fwrapv` e executa o programa. Opções:
 
 ```bash
 ./padolang.sh arquivo.padoin --tokens   # mostra a tabela de tokens
@@ -72,12 +72,15 @@ O `compilar.sh` também empacota o transpilador em `out/padolang.jar`. O `bin/pa
 ```bash
 bin/padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar C
 bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
+bin/padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
 bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens
 bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
 bin/padolang --help | --version
 ```
 
 O `check --json` imprime os erros com fase, código (`L1`..`L6`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+
+O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
 
 Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os editores vão achar a padolang):
 
@@ -218,16 +221,17 @@ padolang/
 │   ├── gerador/
 │   ├── diagnostico/     erros estruturados (fase, código, posição, tamanho)
 │   ├── cli/             subcomandos da linha de comando
+│   ├── runner/          chama o compilador C e executa o programa
 │   └── Main.java
 ├── testes/              suíte obrigatória (válidos e inválidos)
 ├── exemplos/            programas de demonstração
 ├── docs/                decisões de projeto e regras semânticas
 ├── bin/                 lançadores da CLI (padolang, padolang.cmd)
 ├── compilar.sh          compila o transpilador e gera out/padolang.jar
-├── padolang.sh          transpila, compila e executa um programa
+├── padolang.sh          transpila, compila e executa um programa (atalho para bin/padolang run)
 ├── testar.sh            roda todos os testes e exemplos
 ├── testar-lexer-editor.sh  confere o léxico no modo editor
-└── testar-cli.sh        confere a CLI (subcomandos, --json e códigos de saída)
+└── testar-cli.sh        confere a CLI (subcomandos, --json, run e códigos de saída)
 ```
 
 ## Integrantes
