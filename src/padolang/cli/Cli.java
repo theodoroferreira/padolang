@@ -8,6 +8,7 @@ import padolang.formatador.Formatador;
 import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
 import padolang.lexer.Token;
+import padolang.lsp.ServidorLsp;
 import padolang.parser.Parser;
 import padolang.runner.Runner;
 import padolang.semantica.AnalisadorSemantico;
@@ -35,6 +36,7 @@ import java.util.Set;
  *                                           gera o C, compila com gcc e executa
  *   padolang fmt    <arquivo...> [--check | --stdout]
  *                                           formata os arquivos (no lugar, ou só confere, ou imprime)
+ *   padolang lsp                            servidor LSP por stdin/stdout (para os editores)
  *   padolang tokens <arquivo> [--editor]    lista os tokens
  *   padolang ast    <arquivo>               mostra a árvore sintática
  *   padolang --help | --version
@@ -65,6 +67,7 @@ public class Cli {
               fmt    <arquivo...> [opções]   formata os arquivos, gravando no próprio arquivo
                      --check                 só confere: sai com 1 se algum arquivo mudaria
                      --stdout                só imprime o resultado, sem gravar
+              lsp                            servidor LSP por stdin/stdout (usado pelos editores)
               tokens <arquivo> [--editor]    lista os tokens (--editor: comentários e erros também)
               ast    <arquivo>               mostra a árvore sintática
 
@@ -103,10 +106,7 @@ public class Cli {
             case "ast" -> ast(resto);
             case "run" -> run(resto);
             case "fmt" -> fmt(resto);
-            case "lsp" -> {
-                err.println("padolang " + args[0] + ": ainda não implementado");
-                yield ERRO_USO;
-            }
+            case "lsp" -> lsp(resto);
             default -> {
                 err.println("padolang: comando desconhecido: " + args[0]);
                 err.println("Use \"padolang --help\" para ver os comandos.");
@@ -244,6 +244,17 @@ public class Cli {
             err.println("padoERRO ao escrever " + arquivo + ": " + e.getMessage());
             return ERRO_USO;
         }
+    }
+
+    /** O stdout é só do protocolo: o servidor escreve bytes crus nele; o log vai para o stderr. */
+    private int lsp(List<String> args) {
+        for (String arg : args) {
+            if (!arg.equals("--stdio")) {           // --stdio: o que alguns clientes passam; é o único transporte
+                err.println("padolang lsp: opção desconhecida: " + arg);
+                return ERRO_USO;
+            }
+        }
+        return new ServidorLsp(System.in, out, err).executar();
     }
 
     private int tokens(List<String> args) {

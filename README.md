@@ -74,6 +74,7 @@ bin/padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar
 bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
 bin/padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
 bin/padolang fmt    arquivo.padoin... [--check | --stdout]  # formata os arquivos
+bin/padolang lsp                                 # servidor LSP (stdin/stdout), usado pelos editores
 bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens
 bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
 bin/padolang --help | --version
@@ -84,6 +85,8 @@ O `check --json` imprime os erros com fase, código (`L1`..`L6`, `S1`, `R1`..`R2
 O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
 
 O `fmt` formata no próprio arquivo: 2 espaços por bloco, um comando por linha, `{` na mesma linha, `} oin {`, espaços em volta dos operadores binários, comentários preservados e no máximo uma linha em branco seguida. Com `--stdout` só imprime o resultado; com `--check` só confere e sai com 1 se algum arquivo mudaria. Um arquivo com erro léxico ou sintático não é alterado, e o formatador confere que o resultado tem exatamente os mesmos tokens do original.
+
+O `lsp` é um servidor [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) sem dependências (JSON e JSON-RPC escritos à mão): mostra os erros no editor enquanto se digita (com o código `L`, `S` ou `R` e o trecho sublinhado), dá as cores por Semantic Tokens (parâmetros diferentes de variáveis, por exemplo) e formata o documento com o mesmo formatador do `fmt`. As colunas da padolang contam code points e as do LSP contam unidades UTF-16; a conversão fica em `lsp/Posicoes.java` (um 👍 é 1 coluna na padolang e 2 no editor).
 
 Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os editores vão achar a padolang):
 
@@ -226,8 +229,9 @@ padolang/
 │   ├── cli/             subcomandos da linha de comando
 │   ├── runner/          chama o compilador C e executa o programa
 │   ├── formatador/      padolang fmt (a partir dos tokens do modo editor)
+│   ├── lsp/             padolang lsp: JSON, JSON-RPC, diagnósticos, Semantic Tokens, posições UTF-16
 │   └── Main.java
-├── testes/              suíte obrigatória (válidos e inválidos); formatador/ e lexer_editor/
+├── testes/              suíte obrigatória (válidos e inválidos); formatador/, lexer_editor/ e lsp/
 ├── exemplos/            programas de demonstração
 ├── docs/                decisões de projeto e regras semânticas
 ├── bin/                 lançadores da CLI (padolang, padolang.cmd)
@@ -236,6 +240,7 @@ padolang/
 ├── testar.sh            roda todos os testes e exemplos
 ├── testar-lexer-editor.sh  confere o léxico no modo editor
 ├── testar-formatador.sh confere o formatador (testes/formatador/, idempotência, comportamento)
+├── testar-lsp.sh        confere o servidor LSP com a sessão gravada em testes/lsp/
 └── testar-cli.sh        confere a CLI (subcomandos, --json, run e códigos de saída)
 ```
 

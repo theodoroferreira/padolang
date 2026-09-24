@@ -43,6 +43,9 @@ jobs:
       - name: Testar o formatador
         run: ./testar-formatador.sh
 
+      - name: Testar o servidor LSP
+        run: ./testar-lsp.sh
+
       - name: Guardar o código C gerado
         if: always()
         uses: actions/upload-artifact@v4
