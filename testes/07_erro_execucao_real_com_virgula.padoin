@@ -1,0 +1,6 @@
+# erro de execução: número real digitado com vírgula
+# espera-erro: entrada inválida para padoFLOAT: "1,5"
+PADOIN {
+  padoin padoFLOAT x👍
+  padoIN(x)👍
+}

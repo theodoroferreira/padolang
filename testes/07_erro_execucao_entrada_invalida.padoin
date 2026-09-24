@@ -1,0 +1,7 @@
+# erro de execução: texto digitado num padoIN de padoINTER
+# espera-erro: entrada inválida para padoINTER: "doze"
+PADOIN {
+  padoin padoINTER n👍
+  padoIN(n)👍
+  padoPRINTLN(n)👍
+}

@@ -1,5 +1,5 @@
 # erro semântico: padoFLOAT em padoINTER perderia a parte decimal
-# espera-erro: a variável 'n' é padoINTER e não pode receber um padoFLOAT
+# espera-erro: a variável 'n' é padoINTER e não pode receber um padoFLOAT (a parte decimal seria perdida; para truncar, use padoINTER(valor))
 PADOIN {
   padoin padoFLOAT media = 7.5👍
   padoin padoINTER n = media👍

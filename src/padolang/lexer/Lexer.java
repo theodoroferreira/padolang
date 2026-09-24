@@ -17,6 +17,7 @@ public class Lexer {
     private static final int TOM_PELE_INICIO = 0x1F3FB;  // 👍🏻 ... 👍🏿
     private static final int TOM_PELE_FIM = 0x1F3FF;
     private static final int SELETOR_VARIACAO = 0xFE0F;
+    private static final int BOM = 0xFEFF;               // marca de ordem de bytes (editores do Windows)
 
     /** Palavras reservadas: o identificador é lido inteiro (maior casamento) e só depois consultado aqui. */
     private static final Map<String, TokenType> RESERVADAS = Map.ofEntries(
@@ -28,13 +29,21 @@ public class Lexer {
             Map.entry("padoSTRING", TokenType.TIPO_STRING),
             Map.entry("padoIN", TokenType.LEITURA),
             Map.entry("padoPRINT", TokenType.ESCRITA),
+            Map.entry("padoPRINTLN", TokenType.ESCRITA_LINHA),
             Map.entry("pad", TokenType.SE),
             Map.entry("oin", TokenType.SENAO),
             Map.entry("papapadoin", TokenType.REPETICAO),
+            Map.entry("padoinquanto", TokenType.ENQUANTO),
+            Map.entry("padBREAK", TokenType.INTERROMPE),
+            Map.entry("padCONTINUE", TokenType.PROSSEGUE),
             Map.entry("padUNCTION", TokenType.FUNCAO),
             Map.entry("padOUT", TokenType.RETORNO),
             Map.entry("padoTRUE", TokenType.VERDADEIRO),
-            Map.entry("padoFALSE", TokenType.FALSO)
+            Map.entry("padoFALSE", TokenType.FALSO),
+            Map.entry("padAND", TokenType.E),
+            Map.entry("padOR", TokenType.OU),
+            Map.entry("padNOT", TokenType.NAO),
+            Map.entry("padoMOD", TokenType.MODULO)
     );
 
     private final int[] cp;
@@ -45,6 +54,10 @@ public class Lexer {
 
     public Lexer(String fonte) {
         this.cp = fonte.codePoints().toArray();
+        // Um BOM no início do arquivo não faz parte do programa: é ignorado sem contar coluna
+        if (cp.length > 0 && cp[0] == BOM) {
+            pos = 1;
+        }
     }
 
     public List<Token> tokenizar() {

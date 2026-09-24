@@ -1,0 +1,67 @@
+# expressões no modelo do Java: lógicos, precedência, curto-circuito, padoMOD,
+# conversão, estouro de inteiro e escrita de reais (saída conferida em .saida)
+
+padUNCTION padoOLEAN entre(padoINTER x, padoINTER min, padoINTER max) {
+  padOUT x >= min padAND x <= max👍
+}
+
+PADOIN {
+  # comparações e lógicos são valores padoOLEAN
+  padoin padoINTER idade = 20👍
+  padoin padoOLEAN adulto = idade >= 18👍
+  padoin padoOLEAN bloqueado = padoFALSE👍
+  pad (adulto padAND padNOT bloqueado) {
+    padoPRINTLN("entra")👍
+  }
+  padoPRINTLN(entre(5, 1, 10))👍
+  padoPRINTLN(entre(11, 1, 10) padOR adulto)👍
+
+  # precedência: padAND antes de padOR, relacionais antes de ==
+  padoPRINTLN(padoTRUE padOR padoFALSE padAND padoFALSE)👍
+  padoPRINTLN(1 < 2 == 3 < 4)👍
+  padoPRINTLN(padNOT (1 > 2) padAND 2 * 3 + 1 == 7)👍
+
+  # curto-circuito: com d = 0 a divisão não chega a ser avaliada
+  padoin padoINTER d = 0👍
+  pad (d != 0 padAND 10 / d > 2) {
+    padoPRINTLN("não imprime")👍
+  } oin {
+    padoPRINTLN("curto-circuito ok")👍
+  }
+
+  # padoMOD tem o sinal do dividendo, como em Java
+  padoPRINT(7 padoMOD 3)👍 padoPRINT(" ")👍
+  padoPRINT(-7 padoMOD 3)👍 padoPRINT(" ")👍
+  padoPRINTLN(7 padoMOD -3)👍
+
+  # padoINTER(x) trunca em direção a zero
+  padoPRINT(padoINTER(7.8))👍 padoPRINT(" ")👍
+  padoPRINT(padoINTER(-7.8))👍 padoPRINT(" ")👍
+  padoPRINTLN(padoINTER(7))👍
+
+  # estouro dá a volta, como o int do Java
+  padoin padoINTER maximo = 2147483647👍
+  padoPRINTLN(maximo + 1)👍
+  padoin padoINTER minimo = -2147483647 - 1👍
+  padoin padoINTER menosUm = -1👍
+  padoPRINTLN(minimo / menosUm)👍
+
+  # reais no formato do Java
+  padoPRINTLN(7.0)👍
+  padoPRINTLN(10.0 / 3)👍
+  padoPRINTLN(0.1 + 0.2)👍
+  padoPRINTLN(1000000.0)👍
+  padoPRINTLN(12345678.0)👍
+  padoPRINTLN(0.001)👍
+  padoPRINTLN(0.0001)👍
+  padoPRINTLN(-2.5)👍
+  padoPRINTLN(-0.0)👍
+  padoin padoFLOAT zero = 0.0👍
+  padoPRINT(1.0 / zero)👍 padoPRINT(" ")👍
+  padoPRINT(-1.0 / zero)👍 padoPRINT(" ")👍
+  padoPRINTLN(zero / zero)👍
+
+  # divisão inteira x real
+  padoPRINT(7 / 2)👍 padoPRINT(" ")👍
+  padoPRINTLN(7 / 2.0)👍
+}

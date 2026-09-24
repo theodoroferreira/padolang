@@ -1,0 +1,8 @@
+# erro semântico: padAND entre um lógico e um número
+# espera-erro: padAND só se aplica a padoOLEAN, mas recebeu padoOLEAN e padoINTER
+PADOIN {
+  padoin padoINTER x = 5👍
+  pad (x > 0 padAND 1) {
+    padoPRINTLN("?")👍
+  }
+}

@@ -1,0 +1,6 @@
+# erro de execução: padoOLEAN só aceita padoTRUE ou padoFALSE
+# espera-erro: entrada inválida para padoOLEAN (use padoTRUE ou padoFALSE): "sim"
+PADOIN {
+  padoin padoOLEAN b👍
+  padoIN(b)👍
+}

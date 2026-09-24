@@ -1,0 +1,8 @@
+# erro semântico: a condição do pad precisa ser padoOLEAN (como no Java, um número não é condição)
+# espera-erro: a condição do pad precisa ser padoOLEAN, mas é padoINTER
+PADOIN {
+  padoin padoINTER x = 1👍
+  pad (x) {
+    padoPRINTLN("?")👍
+  }
+}

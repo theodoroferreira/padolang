@@ -1,0 +1,12 @@
+# erro semântico: padCONTINUE numa função, fora de laço
+# espera-erro: padCONTINUE fora de laço
+padUNCTION padoINTER f(padoINTER n) {
+  pad (n > 0) {
+    padCONTINUE👍
+  }
+  padOUT n👍
+}
+
+PADOIN {
+  padoPRINTLN(f(1))👍
+}

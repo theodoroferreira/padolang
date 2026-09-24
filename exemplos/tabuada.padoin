@@ -5,14 +5,9 @@ PADOIN {
 
   padoPRINT("Tabuada de qual número? ")👍
   padoIN(n)👍
-  padoPRINT("\n")👍
+  padoPRINTLN()👍
 
   papapadoin (i = 1, i <= 10, i++) {
-    padoPRINT(n)👍
-    padoPRINT(" x ")👍
-    padoPRINT(i)👍
-    padoPRINT(" = ")👍
-    padoPRINT(n * i)👍
-    padoPRINT("\n")👍
+    padoPRINTLN(n + " x " + i + " = " + n * i)👍
   }
 }

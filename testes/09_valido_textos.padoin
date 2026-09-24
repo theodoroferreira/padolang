@@ -1,0 +1,35 @@
+# textos: concatenação no modelo do Java, comparação de conteúdo, leitura da linha inteira
+# e caracteres que o C trataria de forma especial (saída conferida em .saida)
+PADOIN {
+  padoin padoSTRING nome👍
+  padoin padoSTRING vazio👍
+  padoIN(nome)👍
+  padoIN(vazio)👍
+
+  # a linha inteira é lida, com os espaços; uma linha vazia vira ""
+  padoPRINTLN("[" + nome + "]")👍
+  padoPRINTLN("[" + vazio + "]")👍
+
+  # o outro lado do + vira texto; + é associativo à esquerda
+  padoin padoFLOAT media = 7.5👍
+  padoPRINTLN("Nota: " + media)👍
+  padoPRINTLN("a" + 1 + 2)👍
+  padoPRINTLN(1 + 2 + "a")👍
+  padoPRINTLN("aprovado? " + (media >= 7))👍
+  padoPRINTLN("inteiro " + 3.0 + " e real " + 10.0 / 4)👍
+
+  # == compara o conteúdo (diferente do Java, que compara referências)
+  padoin padoSTRING a = "pado"👍
+  padoin padoSTRING b = a + "in"👍
+  pad (b == "padoin") {
+    padoPRINTLN("iguais")👍
+  }
+  pad ("abacaxi" < "banana" padAND "b" > "a") {
+    padoPRINTLN("ordem alfabética")👍
+  }
+
+  # trigrafias (??! ??/) e % não podem mudar o texto no C gerado
+  padoPRINTLN("o que??! e isso??/ 100% \"certo\"")👍
+  padoPRINTLN()👍
+  padoPRINTLN("fim")👍
+}

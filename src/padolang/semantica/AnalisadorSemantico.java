@@ -1,11 +1,10 @@
 package padolang.semantica;
 
 import padolang.ast.Comando;
-import padolang.ast.Comparacao;
 import padolang.ast.Expressao;
 import padolang.ast.Funcao;
-import padolang.ast.OpAritmetico;
-import padolang.ast.OpRelacional;
+import padolang.ast.Operador;
+import padolang.ast.OperadorUnario;
 import padolang.ast.Programa;
 import padolang.ast.Tipo;
 import padolang.semantica.TabelaDeSimbolos.Simbolo;
@@ -27,13 +26,13 @@ import java.util.Set;
  *     chamar outra declarada depois dela, ou a si mesma (recursão);
  *   - tabela de símbolos das VARIÁVEIS, com pilha de escopos (ver TabelaDeSimbolos).
  *
- * As regras estão numeradas (R1..R15) como em docs/semantica.md. Regras de tipo:
+ * O resultado são as Anotacoes: o tipo de cada expressão, que o gerador consulta.
+ *
+ * As regras estão numeradas (R1..R21) como em docs/semantica.md. Em resumo:
  *   - atribuir, inicializar, passar argumento e retornar seguem a mesma regra de compatibilidade:
- *     mesmo tipo, ou padoINTER -> padoFLOAT (alargamento). padoFLOAT -> padoINTER é ERRO,
- *     porque a parte decimal seria perdida sem aviso;
- *   - aritmética (+ - * / e menos unário) só com números: INTER op INTER = INTER, senão FLOAT;
- *   - comparação: número com número, texto com texto (qualquer operador) e lógico com lógico
- *     (só == e !=).
+ *     mesmo tipo, ou padoINTER -> padoFLOAT. padoFLOAT -> padoINTER só com padoINTER(x);
+ *   - aritmética só com números; + com um texto de um dos lados é concatenação;
+ *   - comparações e lógicos produzem padoOLEAN; condições precisam ser padoOLEAN.
  *
  * Quando uma expressão já tem erro, seu tipo vira null ("desconhecido") e as verificações que
  * dependem dele são puladas. Assim um único erro não gera uma cascata de mensagens.
@@ -44,20 +43,25 @@ public final class AnalisadorSemantico {
 
     private final Map<String, Funcao> funcoes = new LinkedHashMap<>();
     private final TabelaDeSimbolos simbolos = new TabelaDeSimbolos();
+    private final Anotacoes anotacoes = new Anotacoes();
     private final List<String> erros = new ArrayList<>();
 
     /** Função sendo analisada; null enquanto analisamos o PADOIN. */
     private Funcao funcaoAtual;
 
+    /** Quantos laços envolvem o comando atual (padBREAK e padCONTINUE só valem se for > 0). */
+    private int lacosAbertos = 0;
+
     /** Nomes declarados no nível mais externo do PADOIN, só para melhorar uma mensagem de erro. */
     private final Set<String> variaveisDoPrincipal = new HashSet<>();
 
-    public void analisar(Programa programa) {
+    public Anotacoes analisar(Programa programa) {
         // 1. Tabela de funções (R9: nomes de função não se repetem)
         for (Funcao f : programa.funcoes()) {
             Funcao anterior = funcoes.putIfAbsent(f.nome(), f);
             if (anterior != null) {
-                erro(f.linha(), "a função '%s' já foi declarada na linha %d", f.nome(), anterior.linha());
+                erro(f.linha(), f.coluna(), "a função '%s' já foi declarada na linha %d",
+                        f.nome(), anterior.linha());
             }
         }
         for (Comando c : programa.principal()) {
@@ -80,25 +84,27 @@ public final class AnalisadorSemantico {
         if (!erros.isEmpty()) {
             throw new SemanticoException(erros);
         }
+        return anotacoes;
     }
 
     // ------------------------------------------------------------ funções
 
     private void funcao(Funcao f) {
         funcaoAtual = f;
+        lacosAbertos = 0;
         // Parâmetros e corpo da função ficam no MESMO escopo (como em C e Java):
         // declarar no corpo uma variável com o nome de um parâmetro é redeclaração.
         simbolos.abrirEscopo();
         for (Funcao.Parametro p : f.parametros()) {
-            declarar(p.nome(), p.tipo(), p.linha(), true);
+            declarar(p.nome(), p.tipo(), p.linha(), p.coluna(), true);
         }
         comandos(f.corpo());
         simbolos.fecharEscopo();
 
         // R12: toda função devolve um valor, então todo caminho precisa terminar em padOUT
         if (!sempreRetorna(f.corpo())) {
-            erro(f.linha(), "a função '%s' pode terminar sem padOUT: todo caminho precisa devolver um %s",
-                    f.nome(), f.tipoRetorno().palavra());
+            erro(f.linha(), f.coluna(), "a função '%s' pode terminar sem padOUT: todo caminho precisa "
+                    + "devolver um %s", f.nome(), f.tipoRetorno().palavra());
         }
         funcaoAtual = null;
     }
@@ -107,7 +113,7 @@ public final class AnalisadorSemantico {
      * Um bloco sempre retorna se algum comando dele sempre retorna:
      *   - padOUT sempre retorna;
      *   - pad/oin sempre retorna se tiver 'oin' e os DOIS ramos sempre retornarem;
-     *   - papapadoin nunca conta, porque o corpo pode não executar nenhuma vez.
+     *   - laços nunca contam, porque o corpo pode não executar nenhuma vez.
      */
     private static boolean sempreRetorna(List<Comando> bloco) {
         for (Comando c : bloco) {
@@ -122,6 +128,33 @@ public final class AnalisadorSemantico {
         return false;
     }
 
+    /**
+     * R21: descreve por que a execução nunca passa deste comando para o seguinte, ou devolve null
+     * se ela pode passar. padOUT, padBREAK e padCONTINUE sempre desviam; um pad/oin desvia se
+     * os dois ramos desviarem. Laços não contam (a condição pode ser falsa logo de início).
+     */
+    private static String desvia(Comando c) {
+        return switch (c) {
+            case Comando.Retorno r -> "padOUT";
+            case Comando.Interrompe i -> "padBREAK";
+            case Comando.Prossegue p -> "padCONTINUE";
+            case Comando.Se se when se.senao() != null
+                    && desvia(se.entao()) != null && desvia(se.senao()) != null ->
+                    "um pad/oin em que todos os caminhos saem do bloco";
+            default -> null;
+        };
+    }
+
+    private static String desvia(List<Comando> bloco) {
+        for (Comando c : bloco) {
+            String motivo = desvia(c);
+            if (motivo != null) {
+                return motivo;
+            }
+        }
+        return null;
+    }
+
     // ------------------------------------------------------------ comandos
 
     /** Cada { } abre um escopo novo; o que for declarado dentro some ao fechar. */
@@ -132,8 +165,17 @@ public final class AnalisadorSemantico {
     }
 
     private void comandos(List<Comando> lista) {
+        String desviou = null;
+        boolean avisado = false;
         for (Comando c : lista) {
+            if (desviou != null && !avisado) {
+                erro(c.linha(), c.coluna(), "código inalcançável: este comando vem depois de %s", desviou);
+                avisado = true;   // um erro por bloco basta
+            }
             comando(c);
+            if (desviou == null) {
+                desviou = desvia(c);
+            }
         }
     }
 
@@ -143,37 +185,49 @@ public final class AnalisadorSemantico {
                 // O valor inicial é analisado ANTES de declarar: "padoin padoINTER x = x + 1👍" é erro
                 if (d.inicial() != null) {
                     Tipo t = tipoDe(d.inicial());
-                    compatibilizar(d.tipo(), t, d.linha(), "a variável '" + d.nome() + "'");
+                    compatibilizar(d.tipo(), t, d.inicial(), "a variável '" + d.nome() + "'");
                 }
-                declarar(d.nome(), d.tipo(), d.linha(), false);
+                declarar(d.nome(), d.tipo(), d.linha(), d.coluna(), false);
             }
             case Comando.Atribuicao a -> {
-                Simbolo s = variavel(a.nome(), a.linha());
+                Simbolo s = variavel(a.nome(), a.linha(), a.coluna());
                 Tipo t = tipoDe(a.valor());
                 if (s != null) {
-                    compatibilizar(s.tipo(), t, a.linha(), "a variável '" + a.nome() + "'");
+                    compatibilizar(s.tipo(), t, a.valor(), "a variável '" + a.nome() + "'");
                 }
             }
             case Comando.Incremento inc -> {
-                Simbolo s = variavel(inc.nome(), inc.linha());
+                Simbolo s = variavel(inc.nome(), inc.linha(), inc.coluna());
                 if (s != null && !s.tipo().numerico()) {           // R13
-                    erro(inc.linha(), "'%s' só se aplica a padoINTER ou padoFLOAT, mas '%s' é %s",
+                    erro(inc.linha(), inc.coluna(), "'%s' só se aplica a padoINTER ou padoFLOAT, mas '%s' é %s",
                             inc.decremento() ? "--" : "++", inc.nome(), s.tipo().palavra());
                 }
             }
-            case Comando.Leitura l -> variavel(l.nome(), l.linha());
-            case Comando.Escrita e -> tipoDe(e.valor());
+            case Comando.ChamadaComando ch -> tipoDe(ch.chamada());
+            case Comando.Leitura l -> {
+                Simbolo s = variavel(l.nome(), l.linha(), l.coluna());
+                if (s != null) {
+                    anotacoes.registrar(l, s.tipo());
+                }
+            }
+            case Comando.Escrita e -> {
+                if (e.valor() != null) {
+                    tipoDe(e.valor());
+                }
+            }
             case Comando.Retorno r -> {
                 Tipo t = tipoDe(r.valor());
                 if (funcaoAtual == null) {                         // R11
-                    erro(r.linha(), "padOUT fora de função: o bloco PADOIN não devolve valor");
+                    erro(r.linha(), r.coluna(), "padOUT fora de função: o bloco PADOIN não devolve valor");
                 } else {
-                    compatibilizar(funcaoAtual.tipoRetorno(), t, r.linha(),
+                    compatibilizar(funcaoAtual.tipoRetorno(), t, r.valor(),
                             "o retorno da função '" + funcaoAtual.nome() + "'");
                 }
             }
+            case Comando.Interrompe i -> dentroDeLaco(i, "padBREAK");
+            case Comando.Prossegue p -> dentroDeLaco(p, "padCONTINUE");
             case Comando.Se se -> {
-                comparacao(se.condicao());
+                condicao(se.condicao(), "pad");
                 bloco(se.entao());
                 if (se.senao() != null) {
                     bloco(se.senao());
@@ -183,29 +237,55 @@ public final class AnalisadorSemantico {
                 if (rep.inicio() != null) {
                     comando(rep.inicio());
                 }
-                comparacao(rep.condicao());
+                condicao(rep.condicao(), "papapadoin");
                 if (rep.passo() != null) {
                     comando(rep.passo());
                 }
-                bloco(rep.corpo());
+                laco(rep.corpo());
             }
+            case Comando.Enquanto enq -> {
+                condicao(enq.condicao(), "padoinquanto");
+                laco(enq.corpo());
+            }
+        }
+    }
+
+    private void laco(List<Comando> corpo) {
+        lacosAbertos++;
+        bloco(corpo);
+        lacosAbertos--;
+    }
+
+    /** R20: padBREAK e padCONTINUE só fazem sentido dentro de um laço. */
+    private void dentroDeLaco(Comando c, String palavra) {
+        if (lacosAbertos == 0) {
+            erro(c.linha(), c.coluna(), "%s fora de laço: só pode aparecer dentro de papapadoin ou padoinquanto",
+                    palavra);
+        }
+    }
+
+    /** R16: a condição de pad, papapadoin e padoinquanto precisa ser padoOLEAN (como no Java). */
+    private void condicao(Expressao e, String comando) {
+        Tipo t = tipoDe(e);
+        if (t != null && t != Tipo.OLEAN) {
+            erro(e.linha(), e.coluna(), "a condição do %s precisa ser padoOLEAN, mas é %s", comando, t.palavra());
         }
     }
 
     // ------------------------------------------------------------ declarações e nomes
 
-    private void declarar(String nome, Tipo tipo, int linha, boolean parametro) {
+    private void declarar(String nome, Tipo tipo, int linha, int coluna, boolean parametro) {
         String oQue = parametro ? "parâmetro" : "variável";
 
         // R3: uma variável não pode ter o nome de uma função
         if (funcoes.containsKey(nome)) {
-            erro(linha, "'%s' já é o nome de uma função e não pode ser usado como %s", nome, oQue);
+            erro(linha, coluna, "'%s' já é o nome de uma função e não pode ser usado como %s", nome, oQue);
         }
 
         // R2: não se declara de novo um nome que ainda está visível (mesmo escopo ou escopo externo)
         Simbolo existente = simbolos.buscar(nome);
         if (existente != null) {
-            erro(linha, "'%s' já foi declarado como %s na linha %d", nome,
+            erro(linha, coluna, "'%s' já foi declarado como %s na linha %d", nome,
                     existente.parametro() ? "parâmetro" : "variável", existente.linha());
             return;   // mantém a primeira declaração
         }
@@ -216,18 +296,18 @@ public final class AnalisadorSemantico {
      * R1: todo nome usado como variável precisa estar declarado e visível.
      * R15: se o nome for de uma função, a mensagem avisa que faltou chamá-la.
      */
-    private Simbolo variavel(String nome, int linha) {
+    private Simbolo variavel(String nome, int linha, int coluna) {
         Simbolo s = simbolos.buscar(nome);
         if (s != null) {
             return s;
         }
         if (funcoes.containsKey(nome)) {
-            erro(linha, "'%s' é uma função, não uma variável (para chamá-la use %s(...))", nome, nome);
+            erro(linha, coluna, "'%s' é uma função, não uma variável (para chamá-la use %s(...))", nome, nome);
         } else if (funcaoAtual != null && variaveisDoPrincipal.contains(nome)) {
-            erro(linha, "variável '%s' não declarada na função '%s' (funções não enxergam as variáveis "
+            erro(linha, coluna, "variável '%s' não declarada na função '%s' (funções não enxergam as variáveis "
                     + "do PADOIN; passe o valor como parâmetro)", nome, funcaoAtual.nome());
         } else {
-            erro(linha, "variável '%s' não declarada", nome);
+            erro(linha, coluna, "variável '%s' não declarada", nome);
         }
         return null;
     }
@@ -236,9 +316,9 @@ public final class AnalisadorSemantico {
 
     /**
      * R4/R5: compatibilidade de atribuição, usada em declaração, atribuição, argumento e padOUT.
-     * Aceita o mesmo tipo ou padoINTER -> padoFLOAT.
+     * Aceita o mesmo tipo ou padoINTER -> padoFLOAT. O erro aponta para o valor.
      */
-    private void compatibilizar(Tipo destino, Tipo origem, int linha, String oQue) {
+    private void compatibilizar(Tipo destino, Tipo origem, Expressao valor, String oQue) {
         if (origem == null || destino == origem) {
             return;
         }
@@ -246,64 +326,148 @@ public final class AnalisadorSemantico {
             return;   // alargamento: 3 vira 3.0 sem perda
         }
         if (destino == Tipo.INTER && origem == Tipo.FLOAT) {
-            erro(linha, "%s é padoINTER e não pode receber um padoFLOAT (a parte decimal seria perdida)", oQue);
+            erro(valor.linha(), valor.coluna(), "%s é padoINTER e não pode receber um padoFLOAT (a parte "
+                    + "decimal seria perdida; para truncar, use padoINTER(valor))", oQue);
             return;
         }
-        erro(linha, "%s é %s e não pode receber um %s", oQue, destino.palavra(), origem.palavra());
+        erro(valor.linha(), valor.coluna(), "%s é %s e não pode receber um %s",
+                oQue, destino.palavra(), origem.palavra());
     }
 
     /** Tipo de uma expressão, ou null se ela tiver algum erro (já registrado). */
     private Tipo tipoDe(Expressao e) {
+        Tipo t = calcularTipo(e);
+        if (t != null) {
+            anotacoes.registrar(e, t);
+        }
+        return t;
+    }
+
+    private Tipo calcularTipo(Expressao e) {
         return switch (e) {
             case Expressao.LiteralInteiro i -> {
                 // R10: o literal precisa caber em um int de 32 bits
                 if (new BigInteger(i.lexema()).compareTo(MAIOR_INTER) > 0) {
-                    erro(i.linha(), "o literal inteiro %s não cabe em padoINTER (máximo %d)",
+                    erro(i.linha(), i.coluna(), "o literal inteiro %s não cabe em padoINTER (máximo %d)",
                             i.lexema(), Integer.MAX_VALUE);
                 }
                 yield Tipo.INTER;
             }
             case Expressao.LiteralReal r -> {
                 if (Double.isInfinite(Double.parseDouble(r.lexema()))) {
-                    erro(r.linha(), "o literal real %s não cabe em padoFLOAT", r.lexema());
+                    erro(r.linha(), r.coluna(), "o literal real %s não cabe em padoFLOAT", r.lexema());
                 }
                 yield Tipo.FLOAT;
             }
             case Expressao.LiteralTexto t -> Tipo.STRING;
             case Expressao.LiteralLogico l -> Tipo.OLEAN;
             case Expressao.Variavel v -> {
-                Simbolo s = variavel(v.nome(), v.linha());
+                Simbolo s = variavel(v.nome(), v.linha(), v.coluna());
                 yield s == null ? null : s.tipo();
             }
-            case Expressao.Negacao n -> {
-                Tipo t = tipoDe(n.operando());
+            case Expressao.Unaria u -> unaria(u);
+            case Expressao.Chamada ch -> chamada(ch);
+            case Expressao.ConversaoInter c -> {
+                // R19: padoINTER(x) converte números; texto e lógico não têm valor inteiro
+                Tipo t = tipoDe(c.valor());
                 if (t != null && !t.numerico()) {
-                    erro(n.linha(), "o menos unário só se aplica a padoINTER ou padoFLOAT, não a %s", t.palavra());
+                    erro(c.linha(), c.coluna(), "padoINTER(...) converte padoFLOAT ou padoINTER, não %s",
+                            t.palavra());
                     yield null;
                 }
-                yield t;
+                yield t == null ? null : Tipo.INTER;
             }
-            case Expressao.Chamada ch -> chamada(ch);
             case Expressao.Binaria b -> binaria(b);
         };
     }
 
-    /** R6/R14: aritmética só entre números, e sem divisão por um zero literal. */
+    /** R6 (menos unário) e R17 (padNOT). */
+    private Tipo unaria(Expressao.Unaria u) {
+        Tipo t = tipoDe(u.operando());
+        if (t == null) {
+            return null;
+        }
+        if (u.operador() == OperadorUnario.NEGATIVO && !t.numerico()) {
+            erro(u.linha(), u.coluna(), "o menos unário só se aplica a padoINTER ou padoFLOAT, não a %s", t.palavra());
+            return null;
+        }
+        if (u.operador() == OperadorUnario.NAO && t != Tipo.OLEAN) {
+            erro(u.linha(), u.coluna(), "padNOT só se aplica a padoOLEAN, não a %s", t.palavra());
+            return null;
+        }
+        return t;
+    }
+
     private Tipo binaria(Expressao.Binaria b) {
         Tipo esq = tipoDe(b.esquerda());
         Tipo dir = tipoDe(b.direita());
+        Operador op = b.operador();
 
-        if (b.operador() == OpAritmetico.DIVISAO && zeroLiteral(b.direita())) {
-            erro(b.linha(), "divisão por zero");
+        // R14: divisão (ou resto) por um zero escrito no código
+        if ((op == Operador.DIVISAO || op == Operador.MODULO) && zeroLiteral(b.direita())) {
+            erro(b.linha(), b.coluna(), "divisão por zero");
         }
         if (esq == null || dir == null) {
+            return null;
+        }
+
+        return switch (op.categoria) {
+            case ARITMETICO -> aritmetica(b, esq, dir);
+            case RELACIONAL -> {
+                // R7: ordem só entre números ou entre textos
+                if ((esq.numerico() && dir.numerico()) || (esq == Tipo.STRING && dir == Tipo.STRING)) {
+                    yield Tipo.OLEAN;
+                }
+                if (esq == Tipo.OLEAN && dir == Tipo.OLEAN) {
+                    erro(b.linha(), b.coluna(), "o operador '%s' não se aplica a padoOLEAN (lógicos só são "
+                            + "comparados com == e !=)", op.simbolo);
+                } else {
+                    erro(b.linha(), b.coluna(), "não é possível comparar %s com %s usando '%s'",
+                            esq.palavra(), dir.palavra(), op.simbolo);
+                }
+                yield null;
+            }
+            case IGUALDADE -> {
+                // R7: igualdade entre dois números, dois textos ou dois lógicos
+                if ((esq.numerico() && dir.numerico()) || esq == dir) {
+                    yield Tipo.OLEAN;
+                }
+                erro(b.linha(), b.coluna(), "não é possível comparar %s com %s usando '%s'",
+                        esq.palavra(), dir.palavra(), op.simbolo);
+                yield null;
+            }
+            case LOGICO -> {
+                // R17: padAND e padOR só entre lógicos
+                if (esq == Tipo.OLEAN && dir == Tipo.OLEAN) {
+                    yield Tipo.OLEAN;
+                }
+                erro(b.linha(), b.coluna(), "%s só se aplica a padoOLEAN, mas recebeu %s e %s",
+                        op.simbolo, esq.palavra(), dir.palavra());
+                yield null;
+            }
+        };
+    }
+
+    /** R6: + - * / entre números; + com texto concatena; R18: padoMOD só entre inteiros. */
+    private Tipo aritmetica(Expressao.Binaria b, Tipo esq, Tipo dir) {
+        Operador op = b.operador();
+        if (op == Operador.SOMA && (esq == Tipo.STRING || dir == Tipo.STRING)) {
+            return Tipo.STRING;   // concatenação: o outro lado vira texto, como no Java
+        }
+        if (op == Operador.MODULO) {
+            if (esq == Tipo.INTER && dir == Tipo.INTER) {
+                return Tipo.INTER;
+            }
+            erro(b.linha(), b.coluna(), "padoMOD só se aplica a padoINTER, mas recebeu %s e %s",
+                    esq.palavra(), dir.palavra());
             return null;
         }
         if (esq.numerico() && dir.numerico()) {
             return (esq == Tipo.INTER && dir == Tipo.INTER) ? Tipo.INTER : Tipo.FLOAT;
         }
-        erro(b.linha(), "operação '%s' inválida entre %s e %s (aritmética só com padoINTER e padoFLOAT)",
-                b.operador().simbolo, esq.palavra(), dir.palavra());
+        erro(b.linha(), b.coluna(), "operação '%s' inválida entre %s e %s (aritmética só com padoINTER e "
+                + "padoFLOAT%s)", op.simbolo, esq.palavra(), dir.palavra(),
+                op == Operador.SOMA ? ", ou + com um padoSTRING" : "");
         return null;
     }
 
@@ -311,7 +475,7 @@ public final class AnalisadorSemantico {
         return switch (e) {
             case Expressao.LiteralInteiro i -> new BigInteger(i.lexema()).signum() == 0;
             case Expressao.LiteralReal r -> Double.parseDouble(r.lexema()) == 0.0;
-            case Expressao.Negacao n -> zeroLiteral(n.operando());
+            case Expressao.Unaria u when u.operador() == OperadorUnario.NEGATIVO -> zeroLiteral(u.operando());
             default -> false;
         };
     }
@@ -329,54 +493,31 @@ public final class AnalisadorSemantico {
         Funcao f = funcoes.get(ch.nome());
         if (f == null) {
             if (simbolos.buscar(ch.nome()) != null) {
-                erro(ch.linha(), "'%s' é uma variável, não uma função", ch.nome());
+                erro(ch.linha(), ch.coluna(), "'%s' é uma variável, não uma função", ch.nome());
             } else {
-                erro(ch.linha(), "função '%s' não declarada", ch.nome());
+                erro(ch.linha(), ch.coluna(), "função '%s' não declarada", ch.nome());
             }
             return null;
         }
 
         List<Funcao.Parametro> params = f.parametros();
         if (params.size() != tiposArgs.size()) {
-            erro(ch.linha(), "a função '%s' espera %d argumento(s), mas recebeu %d",
+            erro(ch.linha(), ch.coluna(), "a função '%s' espera %d argumento(s), mas recebeu %d",
                     f.nome(), params.size(), tiposArgs.size());
         } else {
             for (int i = 0; i < params.size(); i++) {
                 Funcao.Parametro p = params.get(i);
-                compatibilizar(p.tipo(), tiposArgs.get(i), ch.linha(),
+                compatibilizar(p.tipo(), tiposArgs.get(i), ch.argumentos().get(i),
                         "o argumento " + (i + 1) + " de '" + f.nome() + "' (parâmetro '" + p.nome() + "')");
             }
         }
         return f.tipoRetorno();   // mesmo com argumentos errados, o tipo do resultado é conhecido
     }
 
-    /** R7: os dois lados da comparação precisam ser do mesmo "tipo de coisa". */
-    private void comparacao(Comparacao c) {
-        Tipo esq = tipoDe(c.esquerda());
-        Tipo dir = tipoDe(c.direita());
-        if (esq == null || dir == null) {
-            return;
-        }
-        String op = c.operador().simbolo;
-
-        if (esq.numerico() && dir.numerico()) {
-            return;
-        }
-        if (esq == Tipo.STRING && dir == Tipo.STRING) {
-            return;   // ordem alfabética (strcmp no C)
-        }
-        if (esq == Tipo.OLEAN && dir == Tipo.OLEAN) {
-            if (c.operador() != OpRelacional.IGUAL && c.operador() != OpRelacional.DIFERENTE) {
-                erro(c.linha(), "o operador '%s' não se aplica a padoOLEAN (lógicos só são comparados com == e !=)", op);
-            }
-            return;
-        }
-        erro(c.linha(), "não é possível comparar %s com %s usando '%s'", esq.palavra(), dir.palavra(), op);
-    }
-
     // ------------------------------------------------------------ erros
 
-    private void erro(int linha, String formato, Object... args) {
-        erros.add(String.format("padoERRO semântico (linha %d): %s", linha, String.format(formato, args)));
+    private void erro(int linha, int coluna, String formato, Object... args) {
+        erros.add(String.format("padoERRO semântico (linha %d, coluna %d): %s",
+                linha, coluna, String.format(formato, args)));
     }
 }

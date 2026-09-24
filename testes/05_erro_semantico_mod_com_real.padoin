@@ -1,0 +1,5 @@
+# erro semântico: padoMOD com um padoFLOAT
+# espera-erro: padoMOD só se aplica a padoINTER, mas recebeu padoFLOAT e padoINTER
+PADOIN {
+  padoPRINTLN(7.5 padoMOD 2)👍
+}

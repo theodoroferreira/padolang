@@ -1,0 +1,6 @@
+# erro de execução: padoMOD por uma variável que vale 0
+# espera-erro: divisão por zero (padoMOD)
+PADOIN {
+  padoin padoINTER z = 0👍
+  padoPRINTLN(7 padoMOD z)👍
+}

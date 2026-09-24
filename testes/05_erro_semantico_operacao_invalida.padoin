@@ -1,6 +1,6 @@
-# erro semântico: aritmética com texto
-# espera-erro: operação '+' inválida entre padoSTRING e padoINTER
+# erro semântico: subtração com texto (só o + concatena)
+# espera-erro: operação '-' inválida entre padoSTRING e padoINTER
 PADOIN {
   padoin padoSTRING nome = "padoin"👍
-  padoPRINT(nome + 1)👍
+  padoPRINT(nome - 1)👍
 }

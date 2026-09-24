@@ -1,0 +1,5 @@
+# erro semântico: padoINTER(...) de um texto
+# espera-erro: padoINTER(...) converte padoFLOAT ou padoINTER, não padoSTRING
+PADOIN {
+  padoin padoINTER n = padoINTER("42")👍
+}

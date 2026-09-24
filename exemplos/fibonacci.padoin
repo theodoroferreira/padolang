@@ -6,11 +6,10 @@ PADOIN {
   padoin padoINTER i👍
 
   papapadoin (i = 0, i < 15, i++) {
-    padoPRINT(a)👍
-    padoPRINT(" ")👍
+    padoPRINT(a + " ")👍
     proximo = a + b👍
     a = b👍
     b = proximo👍
   }
-  padoPRINT("\n")👍
+  padoPRINTLN()👍
 }

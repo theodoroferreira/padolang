@@ -1,4 +1,4 @@
-# Textos, valores lógicos e uma função que devolve padoSTRING
+# Textos, concatenação, valores lógicos e uma função que devolve padoSTRING
 padUNCTION padoSTRING cumprimento(padoINTER hora) {
   pad (hora < 12) {
     padOUT "Bom dia"👍
@@ -11,28 +11,22 @@ padUNCTION padoSTRING cumprimento(padoINTER hora) {
 PADOIN {
   padoin padoSTRING nome👍
   padoin padoINTER hora👍
-  padoin padoOLEAN conhecido = padoFALSE👍
 
   padoPRINT("Seu nome: ")👍
   padoIN(nome)👍
   padoPRINT("Que horas são (0 a 23)? ")👍
   padoIN(hora)👍
-  padoPRINT("\n")👍
+  padoPRINTLN()👍
 
-  # comparação de textos (vira strcmp no C)
-  pad (nome == "Padoin") {
-    conhecido = padoTRUE👍
+  pad (hora < 0 padOR hora > 23) {
+    padoPRINTLN("Hora inválida: " + hora)👍
+  } oin {
+    # comparação de textos compara o conteúdo (vira strcmp no C)
+    padoin padoOLEAN conhecido = nome == "Padoin"👍
+    padoPRINTLN(cumprimento(hora) + ", " + nome + "!")👍
+    pad (conhecido) {
+      padoPRINTLN("Já te conheço!")👍
+    }
+    padoPRINTLN("conhecido = " + conhecido)👍
   }
-
-  padoPRINT(cumprimento(hora))👍
-  padoPRINT(", ")👍
-  padoPRINT(nome)👍
-  padoPRINT("!\n")👍
-
-  pad (conhecido == padoTRUE) {
-    padoPRINT("Já te conheço!\n")👍
-  }
-  padoPRINT("conhecido = ")👍
-  padoPRINT(conhecido)👍
-  padoPRINT("\n")👍
 }

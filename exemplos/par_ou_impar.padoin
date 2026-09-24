@@ -1,20 +1,14 @@
-# Par ou ímpar sem operador de resto: a divisão entre inteiros é inteira,
-# então a - (a / b) * b dá o resto da divisão de a por b.
-padUNCTION padoINTER resto(padoINTER a, padoINTER b) {
-  padOUT a - (a / b) * b👍
-}
-
+# Par ou ímpar com o operador de resto padoMOD
 PADOIN {
   padoin padoINTER n👍
 
   padoPRINT("Digite um número inteiro: ")👍
   padoIN(n)👍
-  padoPRINT("\n")👍
-  padoPRINT(n)👍
+  padoPRINTLN()👍
 
-  pad (resto(n, 2) == 0) {
-    padoPRINT(" é par\n")👍
+  pad (n padoMOD 2 == 0) {
+    padoPRINTLN(n + " é par")👍
   } oin {
-    padoPRINT(" é ímpar\n")👍
+    padoPRINTLN(n + " é ímpar")👍
   }
 }

@@ -1,0 +1,6 @@
+# erro semântico: padNOT aplicado a um número
+# espera-erro: padNOT só se aplica a padoOLEAN, não a padoINTER
+PADOIN {
+  padoin padoINTER x = 5👍
+  padoin padoOLEAN b = padNOT x👍
+}

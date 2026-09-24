@@ -1,4 +1,4 @@
-# O primeiro programa em Padolang
+# O primeiro programa em padolang
 PADOIN {
-  padoPRINT("Olá, mundo!\n")👍
+  padoPRINTLN("Olá, mundo!")👍
 }

@@ -1,0 +1,8 @@
+# erro semântico: comando depois de padBREAK no mesmo bloco
+# espera-erro: código inalcançável: este comando vem depois de padBREAK
+PADOIN {
+  padoinquanto (padoTRUE) {
+    padBREAK👍
+    padoPRINTLN("nunca")👍
+  }
+}

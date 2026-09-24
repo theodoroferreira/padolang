@@ -14,13 +14,20 @@ public enum TokenType {
     TIPO_STRING("'padoSTRING'"),
     LEITURA("'padoIN'"),
     ESCRITA("'padoPRINT'"),
+    ESCRITA_LINHA("'padoPRINTLN'"),
     SE("'pad'"),
     SENAO("'oin'"),
     REPETICAO("'papapadoin'"),
+    ENQUANTO("'padoinquanto'"),
+    INTERROMPE("'padBREAK'"),
+    PROSSEGUE("'padCONTINUE'"),
     FUNCAO("'padUNCTION'"),
     RETORNO("'padOUT'"),
     VERDADEIRO("'padoTRUE'"),
     FALSO("'padoFALSE'"),
+
+    // Operadores escritos como palavras reservadas
+    E("'padAND'"), OU("'padOR'"), NAO("'padNOT'"), MODULO("'padoMOD'"),
 
     // Identificadores e literais
     ID("identificador"),

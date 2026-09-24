@@ -48,9 +48,4 @@ public final class TabelaDeSimbolos {
         }
         return null;
     }
-
-    /** Quantidade de escopos abertos (útil para depuração e testes). */
-    public int profundidade() {
-        return escopos.size();
-    }
 }

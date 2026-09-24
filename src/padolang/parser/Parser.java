@@ -1,11 +1,10 @@
 package padolang.parser;
 
 import padolang.ast.Comando;
-import padolang.ast.Comparacao;
 import padolang.ast.Expressao;
 import padolang.ast.Funcao;
-import padolang.ast.OpAritmetico;
-import padolang.ast.OpRelacional;
+import padolang.ast.Operador;
+import padolang.ast.OperadorUnario;
 import padolang.ast.Programa;
 import padolang.ast.Tipo;
 import padolang.lexer.Token;
@@ -13,6 +12,7 @@ import padolang.lexer.TokenType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static padolang.lexer.TokenType.*;
 
@@ -54,9 +54,9 @@ public class Parser {
 
     // <Funcao> ::= "padUNCTION" <Tipo> id "(" [ <Params> ] ")" "{" <Bloco> "}"
     private Funcao funcao() {
-        Token inicio = consumir(FUNCAO);
+        consumir(FUNCAO);
         Tipo tipoRetorno = tipo();
-        String nome = consumir(ID, "nome da função").lexema();
+        Token nome = consumir(ID, "nome da função");
 
         consumir(ABRE_PAR);
         List<Funcao.Parametro> parametros = new ArrayList<>();
@@ -69,23 +69,22 @@ public class Parser {
         List<Comando> corpo = bloco();
         consumir(FECHA_CHAVE);
 
-        return new Funcao(tipoRetorno, nome, parametros, corpo, inicio.linha());
+        return new Funcao(tipoRetorno, nome.lexema(), parametros, corpo, nome.linha(), nome.coluna());
     }
 
     // <Params> ::= <Tipo> id { "," <Tipo> id }
     private List<Funcao.Parametro> params() {
         List<Funcao.Parametro> lista = new ArrayList<>();
         do {
-            int linha = atual().linha();
             Tipo t = tipo();
-            String nome = consumir(ID, "nome do parâmetro").lexema();
-            lista.add(new Funcao.Parametro(t, nome, linha));
+            Token nome = consumir(ID, "nome do parâmetro");
+            lista.add(new Funcao.Parametro(t, nome.lexema(), nome.linha(), nome.coluna()));
         } while (aceitar(VIRGULA));
         return lista;
     }
 
     // <Bloco> ::= { <Declaracao> | <Comando> }
-    // O bloco termina quando aparece '}' — quem consome a chave é quem chamou.
+    // O bloco termina quando aparece '}'; quem consome a chave é quem chamou.
     private List<Comando> bloco() {
         List<Comando> comandos = new ArrayList<>();
         while (!verifica(FECHA_CHAVE) && !verifica(EOF)) {
@@ -115,9 +114,9 @@ public class Parser {
 
     // <Declaracao> ::= "padoin" <Tipo> id [ "=" <Expressao> ] "👍"
     private Comando declaracao() {
-        Token inicio = consumir(DECLARA);
+        consumir(DECLARA);
         Tipo t = tipo();
-        String nome = consumir(ID, "nome da variável").lexema();
+        Token nome = consumir(ID, "nome da variável");
 
         Expressao inicial = null;
         if (aceitar(ATRIB)) {
@@ -125,69 +124,99 @@ public class Parser {
         }
         consumir(JOINHA, "'👍' ao final da declaração");
 
-        return new Comando.Declaracao(t, nome, inicial, inicio.linha());
+        return new Comando.Declaracao(t, nome.lexema(), inicial, nome.linha(), nome.coluna());
     }
 
-    // <Comando> ::= <Atribuicao> "👍" | <Leitura> | <Escrita>
-    //             | <Condicional> | <Repeticao> | <Retorno>
+    // <Comando> ::= <ComandoId> "👍" | <Leitura> | <Escrita> | <Condicional> | <Repeticao>
+    //             | <Enquanto> | <Retorno> | "padBREAK" "👍" | "padCONTINUE" "👍"
     private Comando comando() {
-        return switch (atual().tipo()) {
+        Token t = atual();
+        return switch (t.tipo()) {
             case ID -> {
-                Comando c = atribuicao();
-                consumir(JOINHA, "'👍' ao final da atribuição");
+                Comando c = comandoId();
+                consumir(JOINHA, c instanceof Comando.ChamadaComando
+                        ? "'👍' ao final da chamada" : "'👍' ao final da atribuição");
                 yield c;
             }
             case LEITURA -> leitura();
-            case ESCRITA -> escrita();
+            case ESCRITA, ESCRITA_LINHA -> escrita();
             case SE -> condicional();
             case REPETICAO -> repeticao();
+            case ENQUANTO -> enquanto();
             case RETORNO -> retorno();
-            default -> throw new SintaticoException("uma declaração ou um comando", atual());
+            case INTERROMPE -> {
+                avancar();
+                consumir(JOINHA, "'👍' após 'padBREAK'");
+                yield new Comando.Interrompe(t.linha(), t.coluna());
+            }
+            case PROSSEGUE -> {
+                avancar();
+                consumir(JOINHA, "'👍' após 'padCONTINUE'");
+                yield new Comando.Prossegue(t.linha(), t.coluna());
+            }
+            default -> throw new SintaticoException("uma declaração ou um comando", t);
         };
     }
 
-    // <Atribuicao> ::= id "=" <Expressao> | id "++" | id "--"
+    // <ComandoId> ::= id ( "=" <Expressao> | "++" | "--" | "(" [ <Args> ] ")" )
+    // Atribuição e chamada começam com id; a fatoração deixa a escolha para o token seguinte (LL(1)).
+    private Comando comandoId() {
+        Token id = atual();
+        if (verificaProximo(ABRE_PAR)) {
+            Expressao.Chamada ch = chamada();
+            return new Comando.ChamadaComando(ch, id.linha(), id.coluna());
+        }
+        return atribuicao();
+    }
+
+    // <Atribuicao> ::= id ( "=" <Expressao> | "++" | "--" )
+    // Usada também no início e no passo do papapadoin.
     private Comando atribuicao() {
         Token id = consumir(ID, "nome da variável");
 
         if (aceitar(ATRIB)) {
-            return new Comando.Atribuicao(id.lexema(), expressao(), id.linha());
+            return new Comando.Atribuicao(id.lexema(), expressao(), id.linha(), id.coluna());
         }
         if (aceitar(INCREMENTO)) {
-            return new Comando.Incremento(id.lexema(), false, id.linha());
+            return new Comando.Incremento(id.lexema(), false, id.linha(), id.coluna());
         }
         if (aceitar(DECREMENTO)) {
-            return new Comando.Incremento(id.lexema(), true, id.linha());
+            return new Comando.Incremento(id.lexema(), true, id.linha(), id.coluna());
         }
         throw new SintaticoException("'=', '++' ou '--' após '" + id.lexema() + "'", atual());
     }
 
     // <Leitura> ::= "padoIN" "(" id ")" "👍"
     private Comando leitura() {
-        Token inicio = consumir(LEITURA);
+        consumir(LEITURA);
         consumir(ABRE_PAR);
-        String nome = consumir(ID, "a variável que vai receber a leitura").lexema();
+        Token nome = consumir(ID, "a variável que vai receber a leitura");
         consumir(FECHA_PAR);
         consumir(JOINHA, "'👍' ao final do padoIN");
-        return new Comando.Leitura(nome, inicio.linha());
+        return new Comando.Leitura(nome.lexema(), nome.linha(), nome.coluna());
     }
 
     // <Escrita> ::= "padoPRINT" "(" <Expressao> ")" "👍"
+    //             | "padoPRINTLN" "(" [ <Expressao> ] ")" "👍"
     private Comando escrita() {
-        Token inicio = consumir(ESCRITA);
+        Token inicio = avancar();
+        boolean pulaLinha = inicio.tipo() == ESCRITA_LINHA;
         consumir(ABRE_PAR);
-        Expressao valor = expressao();
+        Expressao valor = null;
+        if (!pulaLinha || !verifica(FECHA_PAR)) {
+            valor = expressao();
+        }
         consumir(FECHA_PAR);
-        consumir(JOINHA, "'👍' ao final do padoPRINT");
-        return new Comando.Escrita(valor, inicio.linha());
+        consumir(JOINHA, "'👍' ao final do " + inicio.lexema());
+        return new Comando.Escrita(valor, pulaLinha, inicio.linha(), inicio.coluna());
     }
 
-    // <Condicional> ::= "pad" "(" <ExprLogica> ")" "{" <Bloco> "}"
+    // <Condicional> ::= "pad" "(" <Expressao> ")" "{" <Bloco> "}"
     //                   [ "oin" ( "{" <Bloco> "}" | <Condicional> ) ]
     private Comando condicional() {
         Token inicio = consumir(SE);
         consumir(ABRE_PAR);
-        Comparacao cond = exprLogica();
+        Expressao cond = expressao();
         consumir(FECHA_PAR);
 
         consumir(ABRE_CHAVE);
@@ -197,17 +226,17 @@ public class Parser {
         List<Comando> senao = null;
         if (aceitar(SENAO)) {
             if (verifica(SE)) {
-                senao = List.of(condicional());           // oin pad (...) { } — senão-se
+                senao = List.of(condicional());           // oin pad (...) { }: senão-se
             } else {
                 consumir(ABRE_CHAVE, "'{' ou 'pad' após 'oin'");
                 senao = bloco();
                 consumir(FECHA_CHAVE);
             }
         }
-        return new Comando.Se(cond, entao, senao, inicio.linha());
+        return new Comando.Se(cond, entao, senao, inicio.linha(), inicio.coluna());
     }
 
-    // <Repeticao> ::= "papapadoin" "(" [ <Atribuicao> ] "," <ExprLogica> ","
+    // <Repeticao> ::= "papapadoin" "(" [ <Atribuicao> ] "," <Expressao> ","
     //                 [ <Atribuicao> ] ")" "{" <Bloco> "}"
     private Comando repeticao() {
         Token inicio = consumir(REPETICAO);
@@ -215,7 +244,7 @@ public class Parser {
 
         Comando ini = verifica(ID) ? atribuicao() : null;
         consumir(VIRGULA, "',' após a inicialização do papapadoin");
-        Comparacao cond = exprLogica();
+        Expressao cond = expressao();
         consumir(VIRGULA, "',' após a condição do papapadoin");
         Comando passo = verifica(ID) ? atribuicao() : null;
 
@@ -224,7 +253,19 @@ public class Parser {
         List<Comando> corpo = bloco();
         consumir(FECHA_CHAVE);
 
-        return new Comando.Repeticao(ini, cond, passo, corpo, inicio.linha());
+        return new Comando.Repeticao(ini, cond, passo, corpo, inicio.linha(), inicio.coluna());
+    }
+
+    // <Enquanto> ::= "padoinquanto" "(" <Expressao> ")" "{" <Bloco> "}"
+    private Comando enquanto() {
+        Token inicio = consumir(ENQUANTO);
+        consumir(ABRE_PAR);
+        Expressao cond = expressao();
+        consumir(FECHA_PAR);
+        consumir(ABRE_CHAVE);
+        List<Comando> corpo = bloco();
+        consumir(FECHA_CHAVE);
+        return new Comando.Enquanto(cond, corpo, inicio.linha(), inicio.coluna());
     }
 
     // <Retorno> ::= "padOUT" <Expressao> "👍"
@@ -232,91 +273,137 @@ public class Parser {
         Token inicio = consumir(RETORNO);
         Expressao valor = expressao();
         consumir(JOINHA, "'👍' ao final do padOUT");
-        return new Comando.Retorno(valor, inicio.linha());
+        return new Comando.Retorno(valor, inicio.linha(), inicio.coluna());
     }
 
-    // <ExprLogica> ::= <Expressao> <OpRel> <Expressao>
-    private Comparacao exprLogica() {
-        int linha = atual().linha();
-        Expressao esq = expressao();
-        OpRelacional op = opRel();
-        Expressao dir = expressao();
-        return new Comparacao(esq, op, dir, linha);
-    }
+    // ------------------------------------------------------------ expressões
+    //
+    // Um nível da gramática por nível de precedência, do mais fraco para o mais forte.
+    // Cada nível chama o seguinte, então quem está mais embaixo agrupa primeiro:
+    //   padOR < padAND < == != < relacionais < + - < * / padoMOD < unários < fator
+    // Os laços { } constroem a árvore inclinada à esquerda: a - b - c  =>  (a - b) - c
 
-    // <OpRel> ::= "==" | "!=" | ">" | ">=" | "<" | "<="
-    private OpRelacional opRel() {
-        Token t = atual();
-        OpRelacional op = switch (t.tipo()) {
-            case IGUAL -> OpRelacional.IGUAL;
-            case DIFERENTE -> OpRelacional.DIFERENTE;
-            case MENOR -> OpRelacional.MENOR;
-            case MENOR_IGUAL -> OpRelacional.MENOR_IGUAL;
-            case MAIOR -> OpRelacional.MAIOR;
-            case MAIOR_IGUAL -> OpRelacional.MAIOR_IGUAL;
-            default -> throw new SintaticoException(
-                    "um operador relacional (==, !=, <, <=, >, >=)", t);
-        };
-        avancar();
-        return op;
-    }
+    private static final Map<TokenType, Operador> OPERADORES = Map.ofEntries(
+            Map.entry(OU, Operador.OU), Map.entry(E, Operador.E),
+            Map.entry(IGUAL, Operador.IGUAL), Map.entry(DIFERENTE, Operador.DIFERENTE),
+            Map.entry(MENOR, Operador.MENOR), Map.entry(MENOR_IGUAL, Operador.MENOR_IGUAL),
+            Map.entry(MAIOR, Operador.MAIOR), Map.entry(MAIOR_IGUAL, Operador.MAIOR_IGUAL),
+            Map.entry(MAIS, Operador.SOMA), Map.entry(MENOS, Operador.SUBTRACAO),
+            Map.entry(VEZES, Operador.MULTIPLICACAO), Map.entry(DIVIDIDO, Operador.DIVISAO),
+            Map.entry(MODULO, Operador.MODULO));
 
-    // <Expressao> ::= <Termo> { ( "+" | "-" ) <Termo> }
-    // O laço constrói a árvore inclinada à esquerda: a - b - c  =>  (a - b) - c
+    // <Expressao> ::= <Ou>
     private Expressao expressao() {
-        Expressao esq = termo();
+        return ou();
+    }
+
+    // <Ou> ::= <E> { "padOR" <E> }
+    private Expressao ou() {
+        Expressao esq = e();
+        while (verifica(OU)) {
+            esq = binaria(esq, this::e);
+        }
+        return esq;
+    }
+
+    // <E> ::= <Igualdade> { "padAND" <Igualdade> }
+    private Expressao e() {
+        Expressao esq = igualdade();
+        while (verifica(E)) {
+            esq = binaria(esq, this::igualdade);
+        }
+        return esq;
+    }
+
+    // <Igualdade> ::= <Relacional> { ( "==" | "!=" ) <Relacional> }
+    private Expressao igualdade() {
+        Expressao esq = relacional();
+        while (verifica(IGUAL) || verifica(DIFERENTE)) {
+            esq = binaria(esq, this::relacional);
+        }
+        return esq;
+    }
+
+    // <Relacional> ::= <Aditiva> { ( "<" | "<=" | ">" | ">=" ) <Aditiva> }
+    private Expressao relacional() {
+        Expressao esq = aditiva();
+        while (verifica(MENOR) || verifica(MENOR_IGUAL) || verifica(MAIOR) || verifica(MAIOR_IGUAL)) {
+            esq = binaria(esq, this::aditiva);
+        }
+        return esq;
+    }
+
+    // <Aditiva> ::= <Multiplicativa> { ( "+" | "-" ) <Multiplicativa> }
+    private Expressao aditiva() {
+        Expressao esq = multiplicativa();
         while (verifica(MAIS) || verifica(MENOS)) {
-            Token op = avancar();
-            OpAritmetico o = op.tipo() == MAIS ? OpAritmetico.SOMA : OpAritmetico.SUBTRACAO;
-            esq = new Expressao.Binaria(esq, o, termo(), op.linha());
+            esq = binaria(esq, this::multiplicativa);
         }
         return esq;
     }
 
-    // <Termo> ::= <Fator> { ( "*" | "/" ) <Fator> }
-    // Como <Termo> fica abaixo de <Expressao>, * e / são agrupados antes de + e -.
-    private Expressao termo() {
-        Expressao esq = fator();
-        while (verifica(VEZES) || verifica(DIVIDIDO)) {
-            Token op = avancar();
-            OpAritmetico o = op.tipo() == VEZES ? OpAritmetico.MULTIPLICACAO : OpAritmetico.DIVISAO;
-            esq = new Expressao.Binaria(esq, o, fator(), op.linha());
+    // <Multiplicativa> ::= <Unaria> { ( "*" | "/" | "padoMOD" ) <Unaria> }
+    private Expressao multiplicativa() {
+        Expressao esq = unaria();
+        while (verifica(VEZES) || verifica(DIVIDIDO) || verifica(MODULO)) {
+            esq = binaria(esq, this::unaria);
         }
         return esq;
     }
 
-    // <Fator> ::= id [ "(" [ <Args> ] ")" ] | num_int | num_float | string | bool
-    //           | "(" <Expressao> ")" | "-" <Fator>
+    /** Consome o operador atual e monta o nó com o operando da direita lido pelo nível seguinte. */
+    private Expressao binaria(Expressao esq, java.util.function.Supplier<Expressao> proximoNivel) {
+        Token op = avancar();
+        Expressao dir = proximoNivel.get();
+        return new Expressao.Binaria(esq, OPERADORES.get(op.tipo()), dir, op.linha(), op.coluna());
+    }
+
+    // <Unaria> ::= ( "-" | "padNOT" ) <Unaria> | <Fator>
+    private Expressao unaria() {
+        Token t = atual();
+        if (aceitar(MENOS)) {
+            return new Expressao.Unaria(OperadorUnario.NEGATIVO, unaria(), t.linha(), t.coluna());
+        }
+        if (aceitar(NAO)) {
+            return new Expressao.Unaria(OperadorUnario.NAO, unaria(), t.linha(), t.coluna());
+        }
+        return fator();
+    }
+
+    // <Fator> ::= id [ "(" [ <Args> ] ")" ] | "padoINTER" "(" <Expressao> ")"
+    //           | num_int | num_float | string | "padoTRUE" | "padoFALSE" | "(" <Expressao> ")"
     private Expressao fator() {
         Token t = atual();
         switch (t.tipo()) {
             case ID -> {
-                avancar();
-                if (aceitar(ABRE_PAR)) {                  // id seguido de '(' => chamada
-                    List<Expressao> args = new ArrayList<>();
-                    if (!verifica(FECHA_PAR)) {
-                        args = args();
-                    }
-                    consumir(FECHA_PAR);
-                    return new Expressao.Chamada(t.lexema(), args, t.linha());
+                if (verificaProximo(ABRE_PAR)) {          // id seguido de '(' => chamada
+                    return chamada();
                 }
-                return new Expressao.Variavel(t.lexema(), t.linha());
+                avancar();
+                return new Expressao.Variavel(t.lexema(), t.linha(), t.coluna());
+            }
+            case TIPO_INTER -> {                          // padoINTER(x): conversão explícita
+                avancar();
+                consumir(ABRE_PAR, "'(' após 'padoINTER' (conversão: padoINTER(valor))");
+                Expressao valor = expressao();
+                consumir(FECHA_PAR);
+                return new Expressao.ConversaoInter(valor, t.linha(), t.coluna());
             }
             case NUM_INT -> {
                 avancar();
-                return new Expressao.LiteralInteiro(t.lexema(), t.linha());
+                return new Expressao.LiteralInteiro(t.lexema(), t.linha(), t.coluna());
             }
             case NUM_FLOAT -> {
                 avancar();
-                return new Expressao.LiteralReal(t.lexema(), t.linha());
+                return new Expressao.LiteralReal(t.lexema(), t.linha(), t.coluna());
             }
             case STRING -> {
                 avancar();
-                return new Expressao.LiteralTexto(t.lexema(), t.linha());
+                return new Expressao.LiteralTexto(t.lexema(), t.linha(), t.coluna());
             }
             case VERDADEIRO, FALSO -> {
                 avancar();
-                return new Expressao.LiteralLogico(t.tipo() == VERDADEIRO, t.linha());
+                return new Expressao.LiteralLogico(t.tipo() == VERDADEIRO, t.linha(), t.coluna());
             }
             case ABRE_PAR -> {
                 avancar();
@@ -324,12 +411,20 @@ public class Parser {
                 consumir(FECHA_PAR);
                 return interna;                           // parênteses não geram nó
             }
-            case MENOS -> {
-                avancar();
-                return new Expressao.Negacao(fator(), t.linha());
-            }
             default -> throw new SintaticoException("uma expressão", t);
         }
+    }
+
+    // id "(" [ <Args> ] ")"   — chamada de função, em expressão ou como comando
+    private Expressao.Chamada chamada() {
+        Token nome = consumir(ID, "nome da função");
+        consumir(ABRE_PAR);
+        List<Expressao> args = new ArrayList<>();
+        if (!verifica(FECHA_PAR)) {
+            args = args();
+        }
+        consumir(FECHA_PAR);
+        return new Expressao.Chamada(nome.lexema(), args, nome.linha(), nome.coluna());
     }
 
     // <Args> ::= <Expressao> { "," <Expressao> }
@@ -345,6 +440,11 @@ public class Parser {
 
     private Token atual() {
         return tokens.get(pos);
+    }
+
+    /** Olha um token à frente sem consumir (id seguido de '(' é chamada). */
+    private boolean verificaProximo(TokenType tipo) {
+        return pos + 1 < tokens.size() && tokens.get(pos + 1).tipo() == tipo;
     }
 
     private Token avancar() {

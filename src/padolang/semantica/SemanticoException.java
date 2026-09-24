@@ -11,14 +11,7 @@ import java.util.List;
  */
 public class SemanticoException extends RuntimeException {
 
-    private final List<String> erros;
-
     public SemanticoException(List<String> erros) {
         super(String.join(System.lineSeparator(), erros));
-        this.erros = List.copyOf(erros);
-    }
-
-    public List<String> getErros() {
-        return erros;
     }
 }

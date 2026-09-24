@@ -10,9 +10,6 @@ PADOIN {
   padoin padoINTER i👍
 
   papapadoin (i = 0, i <= 10, i++) {
-    padoPRINT(i)👍
-    padoPRINT("! = ")👍
-    padoPRINT(fatorial(i))👍
-    padoPRINT("\n")👍
+    padoPRINTLN(i + "! = " + fatorial(i))👍
   }
 }

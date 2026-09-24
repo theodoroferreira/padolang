@@ -1,0 +1,6 @@
+# erro de execução: padoINTER de um real que não cabe em 32 bits
+# espera-erro: padoINTER(1.0E10): valor fora da faixa de padoINTER
+PADOIN {
+  padoin padoFLOAT grande = 10000000000.0👍
+  padoPRINTLN(padoINTER(grande))👍
+}

@@ -1,0 +1,6 @@
+# erro de execução: padoIN sem nada para ler
+# espera-erro: fim da entrada
+PADOIN {
+  padoin padoSTRING nome👍
+  padoIN(nome)👍
+}

@@ -1,0 +1,9 @@
+# erro de execução: divisão inteira por uma variável que vale 0
+# espera-erro: padoERRO de execução (linha 7): divisão por zero
+PADOIN {
+  padoin padoINTER z = 0👍
+  padoin padoINTER x = 10👍
+  padoPRINTLN("antes")👍
+  padoPRINTLN(x / z)👍
+  padoPRINTLN("depois")👍
+}

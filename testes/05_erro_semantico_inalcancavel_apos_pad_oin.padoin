@@ -1,0 +1,13 @@
+# erro semântico: os dois ramos do pad/oin saem do laço, então o comando seguinte nunca executa
+# espera-erro: código inalcançável: este comando vem depois de um pad/oin em que todos os caminhos saem do bloco
+PADOIN {
+  padoin padoINTER i👍
+  papapadoin (i = 0, i < 3, i++) {
+    pad (i == 1) {
+      padCONTINUE👍
+    } oin {
+      padBREAK👍
+    }
+    padoPRINTLN(i)👍
+  }
+}

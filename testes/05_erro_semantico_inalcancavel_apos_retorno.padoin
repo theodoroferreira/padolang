@@ -1,0 +1,10 @@
+# erro semântico: comando depois de padOUT nunca executa
+# espera-erro: código inalcançável: este comando vem depois de padOUT
+padUNCTION padoINTER dobro(padoINTER n) {
+  padOUT n * 2👍
+  padoPRINTLN("nunca")👍
+}
+
+PADOIN {
+  padoPRINTLN(dobro(2))👍
+}

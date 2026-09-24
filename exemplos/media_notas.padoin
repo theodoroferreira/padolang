@@ -1,37 +1,30 @@
-# Média de notas: lê notas até receber um valor negativo.
-# O papapadoin sem inicialização e sem passo funciona como um "enquanto".
+# Média de notas: lê notas até receber um valor negativo (laço padoinquanto)
 PADOIN {
   padoin padoFLOAT nota👍
   padoin padoFLOAT soma = 0.0👍
   padoin padoINTER quantidade = 0👍
 
-  padoPRINT("Digite as notas (negativa para encerrar):\n")👍
-
-  # nota recebe -1 antes de cada leitura: se a entrada acabar, o laço termina
-  nota = -1.0👍
+  padoPRINTLN("Digite as notas (negativa para encerrar):")👍
   padoIN(nota)👍
 
-  papapadoin (, nota >= 0, ) {
+  padoinquanto (nota >= 0) {
     soma = soma + nota👍
     quantidade++👍
-    nota = -1.0👍
     padoIN(nota)👍
   }
 
   pad (quantidade == 0) {
-    padoPRINT("Nenhuma nota informada.\n")👍
+    padoPRINTLN("Nenhuma nota informada.")👍
   } oin {
     padoin padoFLOAT media = soma / quantidade👍
-    padoPRINT("Média: ")👍
-    padoPRINT(media)👍
-    padoPRINT("\n")👍
+    padoPRINTLN("Média: " + media + " (parte inteira: " + padoINTER(media) + ")")👍
 
     pad (media >= 7) {
-      padoPRINT("Aprovado\n")👍
+      padoPRINTLN("Aprovado")👍
     } oin pad (media >= 5) {
-      padoPRINT("Exame\n")👍
+      padoPRINTLN("Exame")👍
     } oin {
-      padoPRINT("Reprovado\n")👍
+      padoPRINTLN("Reprovado")👍
     }
   }
 }

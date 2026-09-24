@@ -1,0 +1,38 @@
+# Números primos até um limite: função lógica, padoMOD, padBREAK e padCONTINUE
+padUNCTION padoOLEAN ehPrimo(padoINTER n) {
+  pad (n < 2) {
+    padOUT padoFALSE👍
+  }
+  padoin padoINTER d = 2👍
+  padoinquanto (d * d <= n) {
+    pad (n padoMOD d == 0) {
+      padOUT padoFALSE👍
+    }
+    d++👍
+  }
+  padOUT padoTRUE👍
+}
+
+PADOIN {
+  padoin padoINTER limite👍
+  padoin padoINTER encontrados = 0👍
+  padoin padoINTER n👍
+
+  padoPRINT("Primos até: ")👍
+  padoIN(limite)👍
+  padoPRINTLN()👍
+
+  papapadoin (n = 2, n <= limite, n++) {
+    pad (padNOT ehPrimo(n)) {
+      padCONTINUE👍
+    }
+    padoPRINT(n + " ")👍
+    encontrados++👍
+    pad (encontrados == 20) {
+      padoPRINT("(parando nos 20 primeiros)")👍
+      padBREAK👍
+    }
+  }
+  padoPRINTLN()👍
+  padoPRINTLN(encontrados + " primos encontrados")👍
+}

@@ -1,0 +1,68 @@
+# laços: padoinquanto, padBREAK, padCONTINUE, chamada como comando (saída conferida em .saida)
+
+padUNCTION padoINTER mostra(padoSTRING rotulo, padoINTER n) {
+  padoPRINTLN(rotulo + ": " + n)👍
+  padOUT n👍
+}
+
+padUNCTION padoSTRING classifica(padoINTER n) {
+  pad (n < 0) {
+    padOUT "negativo"👍
+  } oin pad (n == 0) {
+    padOUT "zero"👍
+  } oin {
+    padOUT "positivo"👍
+  }
+}
+
+PADOIN {
+  # padoinquanto: contagem regressiva
+  padoin padoINTER n = 3👍
+  padoinquanto (n > 0) {
+    padoPRINT(n)👍
+    padoPRINT(" ")👍
+    n--👍
+  }
+  padoPRINTLN("fogo!")👍
+
+  # padCONTINUE no papapadoin ainda executa o passo (i++), como no Java
+  padoin padoINTER i👍
+  papapadoin (i = 0, i < 10, i++) {
+    pad (i padoMOD 2 == 1) {
+      padCONTINUE👍
+    }
+    pad (i > 6) {
+      padBREAK👍
+    }
+    padoPRINT(i)👍
+    padoPRINT(" ")👍
+  }
+  padoPRINTLN("| i = " + i)👍
+
+  # padBREAK sai só do laço mais interno
+  padoin padoINTER j👍
+  papapadoin (i = 1, i <= 3, i++) {
+    papapadoin (j = 1, j <= 3, j++) {
+      pad (j > i) {
+        padBREAK👍
+      }
+      padoPRINT(i * 10 + j)👍
+      padoPRINT(" ")👍
+    }
+  }
+  padoPRINTLN()👍
+
+  # chamada como comando: o valor devolvido é descartado
+  mostra("valor", 42)👍
+  padoPRINTLN(classifica(-5) + " " + classifica(0) + " " + classifica(8))👍
+
+  # laço "infinito" com padBREAK
+  padoin padoINTER tentativas = 0👍
+  padoinquanto (padoTRUE) {
+    tentativas++👍
+    pad (tentativas * tentativas > 50) {
+      padBREAK👍
+    }
+  }
+  padoPRINTLN("tentativas = " + tentativas)👍
+}

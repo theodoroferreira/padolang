@@ -9,6 +9,7 @@ import padolang.lexer.Token;
 import padolang.parser.Parser;
 import padolang.parser.SintaticoException;
 import padolang.semantica.AnalisadorSemantico;
+import padolang.semantica.Anotacoes;
 import padolang.semantica.SemanticoException;
 
 import java.io.IOException;
@@ -73,10 +74,10 @@ public class Main {
             }
 
             // 3. Análise semântica: só gera código se o programa fizer sentido
-            new AnalisadorSemantico().analisar(ast);
+            Anotacoes tipos = new AnalisadorSemantico().analisar(ast);
 
             // 4. Geração de código
-            String codigoC = new GeradorC().gerar(ast);
+            String codigoC = new GeradorC(tipos).gerar(ast);
             if (saida.getParent() != null) {
                 Files.createDirectories(saida.getParent());
             }

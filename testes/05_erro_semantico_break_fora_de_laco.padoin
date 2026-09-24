@@ -1,0 +1,8 @@
+# erro semântico: padBREAK fora de um laço
+# espera-erro: padBREAK fora de laço
+PADOIN {
+  padoin padoINTER x = 1👍
+  pad (x > 0) {
+    padBREAK👍
+  }
+}
