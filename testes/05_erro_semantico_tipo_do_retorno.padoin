@@ -1,0 +1,9 @@
+# erro semântico: padOUT com valor de tipo diferente do declarado na função
+# espera-erro: o retorno da função 'nome' é padoSTRING e não pode receber um padoINTER
+padUNCTION padoSTRING nome() {
+  padOUT 42👍
+}
+
+PADOIN {
+  padoPRINT(nome())👍
+}

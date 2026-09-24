@@ -1,0 +1,9 @@
+# erro semântico: função usada sem parênteses, como se fosse variável
+# espera-erro: 'soma' é uma função, não uma variável
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+  padOUT a + b👍
+}
+
+PADOIN {
+  padoin padoINTER x = soma👍
+}

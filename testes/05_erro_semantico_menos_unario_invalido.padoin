@@ -1,0 +1,6 @@
+# erro semântico: menos unário aplicado a um lógico
+# espera-erro: o menos unário só se aplica a padoINTER ou padoFLOAT
+PADOIN {
+  padoin padoOLEAN ok = padoTRUE👍
+  padoPRINT(-ok)👍
+}

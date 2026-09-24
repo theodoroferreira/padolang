@@ -1,0 +1,6 @@
+# erro semântico: ++ em uma variável de texto
+# espera-erro: '++' só se aplica a padoINTER ou padoFLOAT
+PADOIN {
+  padoin padoSTRING s = "a"👍
+  s++👍
+}

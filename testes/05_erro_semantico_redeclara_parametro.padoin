@@ -1,0 +1,10 @@
+# erro semântico: o corpo da função redeclara um parâmetro (parâmetros e corpo dividem o escopo)
+# espera-erro: 'n' já foi declarado como parâmetro na linha 3
+padUNCTION padoINTER dobro(padoINTER n) {
+  padoin padoINTER n = 2👍
+  padOUT n * 2👍
+}
+
+PADOIN {
+  padoPRINT(dobro(4))👍
+}

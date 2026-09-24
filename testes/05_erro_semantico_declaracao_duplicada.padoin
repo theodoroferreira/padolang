@@ -1,0 +1,6 @@
+# erro semântico: a mesma variável declarada duas vezes
+# espera-erro: 'x' já foi declarado como variável na linha 4
+PADOIN {
+  padoin padoINTER x = 1👍
+  padoin padoFLOAT x = 2.5👍
+}

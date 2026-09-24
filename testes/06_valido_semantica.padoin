@@ -1,0 +1,62 @@
+# casos que a análise semântica precisa ACEITAR
+
+# chama uma função declarada depois dela (a tabela de funções é montada antes)
+padUNCTION padoINTER metade(padoINTER n) {
+  padOUT dividir(n, 2)👍
+}
+
+padUNCTION padoINTER dividir(padoINTER a, padoINTER b) {
+  padOUT a / b👍
+}
+
+# padoINTER -> padoFLOAT é permitido no retorno, no argumento e na atribuição
+padUNCTION padoFLOAT media(padoFLOAT a, padoFLOAT b) {
+  pad (a == b) {
+    padOUT a👍
+  } oin {
+    padOUT (a + b) / 2👍
+  }
+}
+
+padUNCTION padoFLOAT inteiro(padoINTER n) {
+  padOUT n👍
+}
+
+PADOIN {
+  padoin padoFLOAT x = 3👍
+  x = x + 0.5👍
+  padoPRINT(x)👍
+  padoPRINT(" ")👍
+  padoPRINT(media(5, 10))👍
+  padoPRINT(" ")👍
+  padoPRINT(inteiro(11))👍
+  padoPRINT(" | ")👍
+  padoPRINT(metade(5) + 0.5)👍
+  padoPRINT(" | ")👍
+
+  # a mesma variável declarada em dois blocos irmãos (não se enxergam)
+  pad (x > 0) {
+    padoin padoSTRING msg = "mesmo nome "👍
+    padoPRINT(msg)👍
+  }
+  pad (x > 1) {
+    padoin padoSTRING msg = "em blocos irmãos"👍
+    padoPRINT(msg)👍
+  }
+  padoPRINT(" | ")👍
+
+  # textos: todos os operadores relacionais (ordem alfabética)
+  pad ("ab" < "ac") {
+    padoPRINT("ab < ac")👍
+  }
+  padoPRINT(" | ")👍
+
+  # variável da função com o mesmo nome de uma do PADOIN: escopos separados
+  padoin padoINTER a = 10👍
+  padoin padoINTER b = 0👍
+  papapadoin (b = a, b > 0, b = b / 2) {
+    padoPRINT(b)👍
+    padoPRINT(" ")👍
+  }
+  padoPRINT("\n")👍
+}

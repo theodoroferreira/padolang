@@ -1,0 +1,10 @@
+# erro semântico: funções não enxergam as variáveis do PADOIN
+# espera-erro: funções não enxergam as variáveis do PADOIN
+padUNCTION padoINTER dobro() {
+  padOUT x * 2👍
+}
+
+PADOIN {
+  padoin padoINTER x = 21👍
+  padoPRINT(dobro())👍
+}

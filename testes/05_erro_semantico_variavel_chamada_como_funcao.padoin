@@ -1,0 +1,6 @@
+# erro semântico: variável usada como se fosse função
+# espera-erro: 'x' é uma variável, não uma função
+PADOIN {
+  padoin padoINTER x = 1👍
+  padoPRINT(x(2))👍
+}

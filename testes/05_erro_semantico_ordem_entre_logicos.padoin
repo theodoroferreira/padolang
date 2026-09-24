@@ -1,0 +1,8 @@
+# erro semântico: < e > não se aplicam a lógicos
+# espera-erro: o operador '>' não se aplica a padoOLEAN
+PADOIN {
+  padoin padoOLEAN a = padoTRUE👍
+  pad (a > padoFALSE) {
+    padoPRINT("?")👍
+  }
+}

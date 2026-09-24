@@ -1,0 +1,6 @@
+# erro semântico: padOUT no bloco principal
+# espera-erro: padOUT fora de função
+PADOIN {
+  padoin padoINTER x = 1👍
+  padOUT x👍
+}

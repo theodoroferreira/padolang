@@ -1,0 +1,6 @@
+# erro semântico: divisão por um zero literal
+# espera-erro: divisão por zero
+PADOIN {
+  padoin padoINTER x = 10👍
+  x = x / 0👍
+}

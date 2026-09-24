@@ -1,0 +1,9 @@
+# erro semântico: argumento de tipo incompatível com o parâmetro
+# espera-erro: o argumento 1 de 'dobro' (parâmetro 'n') é padoINTER e não pode receber um padoSTRING
+padUNCTION padoINTER dobro(padoINTER n) {
+  padOUT n * 2👍
+}
+
+PADOIN {
+  padoPRINT(dobro("dois"))👍
+}

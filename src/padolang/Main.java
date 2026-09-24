@@ -2,13 +2,14 @@ package padolang;
 
 import padolang.ast.AstPrinter;
 import padolang.ast.Programa;
-import padolang.gerador.GeracaoException;
 import padolang.gerador.GeradorC;
 import padolang.lexer.Lexer;
 import padolang.lexer.LexicoException;
 import padolang.lexer.Token;
 import padolang.parser.Parser;
 import padolang.parser.SintaticoException;
+import padolang.semantica.AnalisadorSemantico;
+import padolang.semantica.SemanticoException;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -22,7 +23,7 @@ import java.util.List;
  *
  *   java -cp out padolang.Main <arquivo.padoin> [-o saida.c] [--tokens] [--ast]
  *
- * Pipeline: LÉXICO -> TOKENS -> PARSER -> AST -> (SEMÂNTICA, a fazer) -> CÓDIGO C
+ * Pipeline: LÉXICO -> TOKENS -> PARSER -> AST -> SEMÂNTICA -> CÓDIGO C
  * Sem "-o", o C é gerado ao lado do fonte, com a extensão .c.
  */
 public class Main {
@@ -71,7 +72,8 @@ public class Main {
                 out.println();
             }
 
-            // 3. Análise semântica — próxima etapa
+            // 3. Análise semântica: só gera código se o programa fizer sentido
+            new AnalisadorSemantico().analisar(ast);
 
             // 4. Geração de código
             String codigoC = new GeradorC().gerar(ast);
@@ -81,7 +83,7 @@ public class Main {
             Files.writeString(saida, codigoC, StandardCharsets.UTF_8);
             err.println("C gerado em " + saida);
 
-        } catch (LexicoException | SintaticoException | GeracaoException e) {
+        } catch (LexicoException | SintaticoException | SemanticoException e) {
             err.println(e.getMessage());
             System.exit(1);
         } catch (IOException e) {

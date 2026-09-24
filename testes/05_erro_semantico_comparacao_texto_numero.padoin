@@ -1,0 +1,8 @@
+# erro semântico: comparação entre texto e número
+# espera-erro: não é possível comparar padoSTRING com padoINTER
+PADOIN {
+  padoin padoSTRING nome = "padoin"👍
+  pad (nome == 10) {
+    padoPRINT("?")👍
+  }
+}

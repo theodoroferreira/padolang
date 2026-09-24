@@ -1,0 +1,13 @@
+# erro semântico: duas funções com o mesmo nome
+# espera-erro: a função 'f' já foi declarada na linha 3
+padUNCTION padoINTER f(padoINTER a) {
+  padOUT a👍
+}
+
+padUNCTION padoFLOAT f(padoFLOAT a) {
+  padOUT a👍
+}
+
+PADOIN {
+  padoPRINT(f(1))👍
+}

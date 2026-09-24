@@ -1,0 +1,5 @@
+# erro semântico: chamada de função que não existe
+# espera-erro: função 'dobro' não declarada
+PADOIN {
+  padoPRINT(dobro(2))👍
+}

@@ -1,0 +1,13 @@
+# erro semântico: função que pode terminar sem padOUT (falta o 'oin')
+# espera-erro: a função 'sinal' pode terminar sem padOUT
+padUNCTION padoINTER sinal(padoINTER n) {
+  pad (n > 0) {
+    padOUT 1👍
+  } oin pad (n < 0) {
+    padOUT -1👍
+  }
+}
+
+PADOIN {
+  padoPRINT(sinal(0))👍
+}

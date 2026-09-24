@@ -1,0 +1,5 @@
+# erro semântico: literal inteiro que não cabe em 32 bits
+# espera-erro: o literal inteiro 3000000000 não cabe em padoINTER
+PADOIN {
+  padoin padoINTER grande = 3000000000👍
+}

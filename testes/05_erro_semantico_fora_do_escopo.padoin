@@ -1,0 +1,9 @@
+# erro semântico: variável declarada dentro de um bloco não existe depois que o bloco fecha
+# espera-erro: variável 'dobro' não declarada
+PADOIN {
+  padoin padoINTER x = 3👍
+  pad (x > 0) {
+    padoin padoINTER dobro = x * 2👍
+  }
+  padoPRINT(dobro)👍
+}

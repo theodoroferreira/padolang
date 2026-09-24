@@ -1,0 +1,9 @@
+# erro semântico: chamada com número errado de argumentos
+# espera-erro: a função 'soma' espera 2 argumento(s), mas recebeu 3
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+  padOUT a + b👍
+}
+
+PADOIN {
+  padoPRINT(soma(1, 2, 3))👍
+}

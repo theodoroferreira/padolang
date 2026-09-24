@@ -1,0 +1,6 @@
+# erro semântico: texto atribuído a uma variável inteira
+# espera-erro: a variável 'idade' é padoINTER e não pode receber um padoSTRING
+PADOIN {
+  padoin padoINTER idade👍
+  idade = "vinte"👍
+}

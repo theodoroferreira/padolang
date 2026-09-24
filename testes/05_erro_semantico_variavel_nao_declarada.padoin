@@ -1,0 +1,6 @@
+# erro semântico: uso de variável que nunca foi declarada
+# espera-erro: variável 'total' não declarada
+PADOIN {
+  padoin padoINTER x = 1👍
+  total = x + 1👍
+}

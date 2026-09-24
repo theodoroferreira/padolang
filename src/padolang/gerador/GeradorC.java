@@ -8,6 +8,7 @@ import padolang.ast.OpAritmetico;
 import padolang.ast.Programa;
 import padolang.ast.Tipo;
 
+import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
@@ -29,9 +30,13 @@ import java.util.stream.Collectors;
  *
  * O gerador precisa saber o tipo de cada expressão para escolher o formato
  * do printf/scanf e para comparar textos com strcmp. Por isso ele mantém uma
- * pilha de escopos (nome -> tipo). Quando a análise semântica existir, ela
- * garante antes que todo nome existe e que os tipos batem; aqui o gerador só
- * CONSULTA os tipos.
+ * pilha de escopos (nome -> tipo), mas só para CONSULTAR os tipos: o
+ * AnalisadorSemantico roda antes e já garantiu que todo nome existe e que os
+ * tipos batem. As exceções que restam aqui (IllegalStateException) indicam um
+ * defeito do próprio transpilador, nunca um erro do programa Padolang.
+ *
+ * As funções e variáveis auxiliares do C gerado usam o prefixo "padolang_",
+ * que nunca colide com um identificador do usuário (esses sempre começam com "pad_").
  */
 public class GeradorC {
 
@@ -92,7 +97,7 @@ public class GeradorC {
         linha("");
         if (usaLeituraTexto) {
             linha("/* Lê uma linha do teclado e devolve uma cópia alocada (padoIN de padoSTRING). */");
-            linha("static char *pad_ler_texto(void) {");
+            linha("static char *padolang_ler_texto(void) {");
             linha("    char buf[256];");
             linha("    if (scanf(\" %255[^\\n]\", buf) != 1) buf[0] = '\\0';");
             linha("    char *s = malloc(strlen(buf) + 1);");
@@ -167,19 +172,10 @@ public class GeradorC {
 
     /** Atribuição e ++/-- sem o ';' — reaproveitado no cabeçalho do for. */
     private String simples(Comando c) {
-        tipoDaVariavel(nomeAlvo(c), c.linha());   // garante que a variável existe
         return switch (c) {
             case Comando.Atribuicao a -> nome(a.nome()) + " = " + expr(a.valor());
             case Comando.Incremento i -> nome(i.nome()) + (i.decremento() ? "--" : "++");
             default -> throw new IllegalStateException("comando inesperado no for: " + c);
-        };
-    }
-
-    private static String nomeAlvo(Comando c) {
-        return switch (c) {
-            case Comando.Atribuicao a -> a.nome();
-            case Comando.Incremento i -> i.nome();
-            default -> throw new IllegalStateException("comando inesperado: " + c);
         };
     }
 
@@ -224,10 +220,10 @@ public class GeradorC {
         switch (tipoDaVariavel(l.nome(), l.linha())) {
             case INTER -> linha("scanf(\"%d\", &" + v + ");");
             case FLOAT -> linha("scanf(\"%lf\", &" + v + ");");
-            case OLEAN -> linha("{ int pad_tmp = 0; scanf(\"%d\", &pad_tmp); " + v + " = pad_tmp != 0; }");
+            case OLEAN -> linha("{ int padolang_tmp = 0; scanf(\"%d\", &padolang_tmp); " + v + " = padolang_tmp != 0; }");
             case STRING -> {
                 usaLeituraTexto = true;
-                linha(v + " = pad_ler_texto();");
+                linha(v + " = padolang_ler_texto();");
             }
         }
     }
@@ -257,13 +253,11 @@ public class GeradorC {
             }
             // Sempre parentizamos o operando não atômico: - -1 viraria "--1", que em C é decremento
             case Expressao.Negacao n -> "-" + parentizar(n.operando(), !(atomica(n.operando())));
-            case Expressao.Variavel v -> {
-                tipoDaVariavel(v.nome(), v.linha());   // garante que existe
-                yield nome(v.nome());
-            }
+            case Expressao.Variavel v -> nome(v.nome());
             case Expressao.Chamada ch -> nome(ch.nome()) + "(" + ch.argumentos().stream()
                     .map(this::expr).collect(Collectors.joining(", ")) + ")";
-            case Expressao.LiteralInteiro i -> i.lexema();
+            // Normaliza o número: em C, "010" seria octal (vale 8), e "08" nem compila
+            case Expressao.LiteralInteiro i -> new BigInteger(i.lexema()).toString();
             case Expressao.LiteralReal r -> r.lexema();
             case Expressao.LiteralTexto t -> t.lexema();     // escapes da Padolang já são os do C
             case Expressao.LiteralLogico l -> l.valor() ? "true" : "false";
@@ -300,7 +294,7 @@ public class GeradorC {
             case Expressao.Chamada ch -> {
                 Funcao f = funcoes.get(ch.nome());
                 if (f == null) {
-                    throw new GeracaoException("função '" + ch.nome() + "' não declarada", ch.linha());
+                    throw interno("função '" + ch.nome() + "' não declarada", ch.linha());
                 }
                 yield f.tipoRetorno();
             }
@@ -313,8 +307,7 @@ public class GeradorC {
                 if ((esq == Tipo.INTER || esq == Tipo.FLOAT) && (dir == Tipo.INTER || dir == Tipo.FLOAT)) {
                     yield Tipo.FLOAT;
                 }
-                throw new GeracaoException("operação '" + b.operador().simbolo + "' entre " + esq + " e "
-                        + dir + " não é suportada", b.linha());
+                throw interno("operação '" + b.operador().simbolo + "' entre " + esq + " e " + dir, b.linha());
             }
         };
     }
@@ -326,7 +319,13 @@ public class GeradorC {
                 return t;
             }
         }
-        throw new GeracaoException("variável '" + nome + "' não declarada", linha);
+        throw interno("variável '" + nome + "' não declarada", linha);
+    }
+
+    /** Situação que a análise semântica deveria ter barrado: é defeito do transpilador. */
+    private static IllegalStateException interno(String mensagem, int linha) {
+        return new IllegalStateException("erro interno do gerador (linha " + linha + "): " + mensagem
+                + " — a análise semântica deveria ter barrado isto");
     }
 
     private static String tipoC(Tipo t) {
