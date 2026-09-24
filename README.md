@@ -4,7 +4,7 @@
 
 ```
 PADOIN {
-  padoin padoINTER x = 2 + 3 * 4👍
+  padoin padoSTRING x = "hello world"👍
   padoPRINT(x)👍
   padoPRINT("\n")👍
 }
