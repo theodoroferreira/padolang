@@ -30,7 +30,21 @@ arquivo.padoin → LÉXICO → TOKENS → PARSER → AST → SEMÂNTICA → CÓD
 | Análise semântica | `src/padolang/semantica/` | tabela de funções, tabela de símbolos com pilha de escopos e regras de tipo; anota o tipo de cada expressão |
 | Geração de código | `src/padolang/gerador/` | percorre a AST e emite C, com as funções auxiliares de execução que o programa usar |
 
-## Pré-requisitos
+## Instalação
+
+Para só usar a linguagem, baixe a versão pronta na página de [Releases](https://github.com/theodoroferreira/padolang/releases). Precisa do **Java 21** ou superior e do **gcc** (no Ubuntu: `sudo apt install openjdk-21-jre gcc`).
+
+```bash
+unzip padolang-0.1.0.zip
+cd padolang-0.1.0
+bin/padolang run exemplos/ola_mundo.padoin
+```
+
+Para usar só `padolang` de qualquer pasta, coloque o `bin/` no `PATH` (ver [CLI](#cli-binpadolang)). No Windows, use o `bin\padolang.cmd`; o `run` precisa de um `gcc` no `PATH` (por exemplo, o do MSYS2).
+
+Na mesma página está o `padolang-0.1.0.vsix`, a extensão para VS Code ou Cursor: `code --install-extension padolang-0.1.0.vsix`, ou "Extensions: Install from VSIX...".
+
+## Pré-requisitos (para compilar a partir do código)
 
 - **JDK 21** ou superior
 - **gcc**
@@ -96,7 +110,7 @@ export PATH="$PWD/bin:$PATH"     # no ~/.bashrc ou ~/.zshrc, com o caminho compl
 
 ### Extensão VS Code / Cursor (`editores/vscode/`)
 
-Cores (gramática TextMate e Semantic Tokens), erros sublinhados enquanto se digita, formatação (`Shift+Alt+F`) e o comando "Padolang: Executar arquivo", que roda o programa num terminal integrado com entrada pelo teclado. Precisa do Java 21. Para gerar e instalar:
+Cores (gramática TextMate e Semantic Tokens), erros sublinhados enquanto se digita, formatação (`Shift+Alt+F`) e o comando "Padolang: Executar arquivo", que roda o programa num terminal integrado com entrada pelo teclado. Precisa do Java 21. O `.vsix` pronto está nas [Releases](https://github.com/theodoroferreira/padolang/releases); para gerar a partir do código:
 
 ```bash
 ./compilar.sh
@@ -227,6 +241,15 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
 A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão VS Code e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
+
+Para publicar uma versão, atualize `VERSAO` em `src/padolang/cli/Cli.java` e `version` em `editores/vscode/package.json` e envie uma tag com o mesmo número:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+O workflow `release.yml` confere se a tag bate com as duas versões, roda os mesmos testes e cria a Release com o `padolang-<versão>.zip` (lançadores `bin/`, `out/padolang.jar` já compilado, exemplos) e o `padolang-<versão>.vsix`.
 
 ## Estrutura do repositório
 

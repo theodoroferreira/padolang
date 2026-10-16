@@ -5,6 +5,7 @@ on:
     branches: [main, ferramentas]
   pull_request:
     branches: [main, ferramentas]
+  workflow_call:
 
 jobs:
   testes:
@@ -33,6 +34,12 @@ jobs:
 
       - name: Testar o léxico no modo editor
         run: ./testar-lexer-editor.sh
+
+      - name: Guardar o jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: padolang-jar
+          path: out/padolang.jar
 
       - name: Testar a CLI
         run: |

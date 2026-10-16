@@ -1,0 +1,67 @@
+name: Release
+
+# Publica uma Release ao enviar uma tag de versão:
+#   git tag v0.1.0 && git push origin v0.1.0
+# A tag precisa bater com a versão da CLI (Cli.VERSAO) e da extensão (package.json).
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  versao:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Conferir a versão
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CLI="$(sed -n 's/.*String VERSAO = "\(.*\)";.*/\1/p' src/padolang/cli/Cli.java)"
+          EXT="$(node -p 'require("./editores/vscode/package.json").version')"
+          echo "tag: $TAG | Cli.VERSAO: $CLI | package.json: $EXT"
+          if [ "$TAG" != "$CLI" ] || [ "$TAG" != "$EXT" ]; then
+            echo "::error::a tag v$TAG não bate com Cli.VERSAO ($CLI) e package.json ($EXT)"
+            exit 1
+          fi
+
+  testes:
+    needs: versao
+    uses: ./.github/workflows/testes.yml
+
+  publicar:
+    needs: testes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Baixar o jar e a extensão testados
+        uses: actions/download-artifact@v4
+        with:
+          path: artefatos
+
+      - name: Montar o zip
+        run: |
+          NOME="padolang-${GITHUB_REF_NAME#v}"
+          mkdir -p "$NOME/out"
+          cp -r bin exemplos LICENSE README.md "$NOME/"
+          cp artefatos/padolang-jar/padolang.jar "$NOME/out/"
+          chmod +x "$NOME/bin/padolang"
+          zip -r "$NOME.zip" "$NOME"
+
+      - name: Criar a Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "padolang $GITHUB_REF_NAME" \
+            --generate-notes \
+            padolang-*.zip \
+            artefatos/padolang-vsix/*.vsix
