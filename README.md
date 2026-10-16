@@ -10,117 +10,204 @@ PADOIN {
 ```
 
 ```
-$ ./padolang.sh exemplo.padoin
-C gerado em saida/exemplo.c
+$ padolang run exemplo.padoin
 ---------- executando exemplo ----------
 hello world
 ```
 
-## Como funciona
+[Começando](#começando) · [Referência da linguagem](#referência-da-linguagem) · [Linha de comando](#linha-de-comando) · [Desenvolvimento](#desenvolvimento)
 
-```
-arquivo.padoin → LÉXICO → TOKENS → PARSER → AST → SEMÂNTICA → CÓDIGO C → gcc → executável
-```
+## Começando
 
-| Etapa | Onde está | O que faz |
-|---|---|---|
-| Análise léxica | `src/padolang/lexer/` | transforma o texto em tokens, com linha e coluna |
-| Análise sintática | `src/padolang/parser/` | parser por descida recursiva, com um método por produção da gramática; constrói a AST |
-| AST | `src/padolang/ast/` | árvore sintática abstrata (records Java) |
-| Análise semântica | `src/padolang/semantica/` | tabela de funções, tabela de símbolos com pilha de escopos e regras de tipo; anota o tipo de cada expressão |
-| Geração de código | `src/padolang/gerador/` | percorre a AST e emite C, com as funções auxiliares de execução que o programa usar |
+### 1. Instale
 
-## Instalação
+A padolang precisa de duas coisas no computador: o **Java 21** ou mais novo, que roda o transpilador, e o **gcc**, que compila o C gerado.
 
-Para só usar a linguagem, baixe a versão pronta na página de [Releases](https://github.com/theodoroferreira/padolang/releases). Precisa do **Java 21** ou superior e do **gcc** (no Ubuntu: `sudo apt install openjdk-21-jre gcc`).
+| Sistema | Como instalar |
+|---|---|
+| Ubuntu / Debian | `sudo apt install openjdk-21-jre gcc` |
+| macOS | `brew install openjdk@21` e `xcode-select --install` (traz o `gcc`) |
+| Windows | Java do [Adoptium](https://adoptium.net/) e gcc do [MSYS2](https://www.msys2.org/) (`pacman -S mingw-w64-ucrt-x86_64-gcc`, com a pasta `ucrt64\bin` no `Path`) |
+
+Depois baixe o `padolang-0.1.0.zip` na página de [Releases](https://github.com/theodoroferreira/padolang/releases), descompacte e confira:
 
 ```bash
 unzip padolang-0.1.0.zip
 cd padolang-0.1.0
-bin/padolang run exemplos/ola_mundo.padoin
+bin/padolang --version          # padolang 0.1.0
 ```
 
-Para usar só `padolang` de qualquer pasta, coloque o `bin/` no `PATH` (ver [CLI](#cli-binpadolang)). No Windows, use o `bin\padolang.cmd`; o `run` precisa de um `gcc` no `PATH` (por exemplo, o do MSYS2).
+Para chamar só `padolang`, de qualquer pasta, coloque o `bin/` no `PATH`:
 
-Na mesma página está o `padolang-0.1.0.vsix`, a extensão para VS Code ou Cursor: `code --install-extension padolang-0.1.0.vsix`, ou "Extensions: Install from VSIX...".
+- **Linux / macOS**: acrescente ao `~/.bashrc` (ou `~/.zshrc`) a linha abaixo, com o caminho completo, e abra um terminal novo:
+  ```bash
+  export PATH="$HOME/padolang-0.1.0/bin:$PATH"
+  ```
+- **Windows**: em "Editar as variáveis de ambiente do sistema" → `Path` → Novo, adicione a pasta `bin` (por exemplo `C:\padolang-0.1.0\bin`). O comando é o `padolang.cmd`, chamado também como `padolang`.
 
-## Pré-requisitos (para compilar a partir do código)
+### 2. Escreva o primeiro programa
 
-- **JDK 21** ou superior
-- **gcc**
-- **bash** (Linux, macOS ou WSL)
+Crie um arquivo `ola.padoin`:
 
-No Ubuntu:
+```
+PADOIN {
+  padoPRINTLN("Olá, padolang!")👍
+}
+```
+
+E rode:
+
+```
+$ padolang run ola.padoin
+---------- executando ola ----------
+Olá, padolang!
+```
+
+O `run` faz tudo de uma vez: confere o programa, gera o C, compila com o gcc e executa. Três regras já aparecem aqui:
+
+- os arquivos têm a extensão `.padoin`;
+- o programa principal fica dentro de `PADOIN { ... }`;
+- todo comando termina com `👍`. Para digitar o 👍, copie e cole, ou use o seletor de emoji do sistema (`Win` + `.` no Windows, `Ctrl` + `Cmd` + `Espaço` no macOS).
+
+### 3. Um tour rápido
+
+**Variáveis.** Toda variável é declarada com `padoin`, o tipo e o nome. Os tipos são `padoINTER` (inteiro), `padoFLOAT` (real), `padoOLEAN` (lógico) e `padoSTRING` (texto). O `+` com um texto de um dos lados concatena:
+
+```
+PADOIN {
+  padoin padoSTRING nome = "Padoin"👍
+  padoin padoINTER ano = 2026👍
+  padoin padoFLOAT nota = 9.5👍
+  padoPRINTLN("Olá, " + nome + "! Ano: " + ano + ", nota: " + nota)👍
+}
+```
+
+```
+Olá, Padoin! Ano: 2026, nota: 9.5
+```
+
+**Entrada e decisões.** `padoIN` lê uma linha do teclado para a variável. `pad` é o *se*, `oin` é o *senão*, e `oin pad` encadeia mais uma condição:
+
+```
+PADOIN {
+  padoin padoINTER idade👍
+  padoPRINT("Sua idade: ")👍
+  padoIN(idade)👍
+
+  pad (idade >= 18) {
+    padoPRINTLN("Maior de idade")👍
+  } oin pad (idade >= 16) {
+    padoPRINTLN("Já pode votar")👍
+  } oin {
+    padoPRINTLN("Menor de idade")👍
+  }
+}
+```
+
+**Laços.** `papapadoin` é o *for*, com as três partes separadas por vírgula; `padoinquanto` é o *while*:
+
+```
+PADOIN {
+  padoin padoINTER i👍
+  papapadoin (i = 1, i <= 3, i++) {
+    padoPRINTLN("volta " + i)👍
+  }
+
+  padoin padoINTER n = 10👍
+  padoinquanto (n > 0) {
+    padoPRINT(n + " ")👍
+    n = n - 3👍
+  }
+  padoPRINTLN()👍
+}
+```
+
+```
+volta 1
+volta 2
+volta 3
+10 7 4 1
+```
+
+**Funções.** São declaradas antes do `PADOIN` com `padUNCTION`, o tipo de retorno e os parâmetros; `padOUT` devolve o valor:
+
+```
+padUNCTION padoINTER dobro(padoINTER x) {
+  padOUT x * 2👍
+}
+
+padUNCTION padoOLEAN par(padoINTER x) {
+  padOUT x padoMOD 2 == 0👍
+}
+
+PADOIN {
+  padoPRINTLN(dobro(21))👍
+  padoPRINTLN(par(7))👍
+}
+```
+
+```
+42
+padoFALSE
+```
+
+O resto da linguagem (`padBREAK`, `padCONTINUE`, operadores lógicos, conversões, comentários) está na [referência](#referência-da-linguagem).
+
+### 4. Quando algo dá errado
+
+Antes de gerar o C, a padolang confere o programa e aponta a fase, a linha e a coluna de cada erro. Com o `check` dá para conferir sem executar:
+
+```
+PADOIN {
+  padoin padoINTER idade = "vinte"👍
+  padoPRINTLN(idad)👍
+}
+```
+
+```
+$ padolang check erro.padoin
+padoERRO semântico (linha 2, coluna 28): a variável 'idade' é padoINTER e não pode receber um padoSTRING
+padoERRO semântico (linha 3, coluna 15): variável 'idad' não declarada
+```
+
+Esquecer o 👍 é um erro sintático, apontado onde o comando deveria ter terminado:
+
+```
+padoERRO sintático (linha 3, coluna 1): esperado '👍' ao final do padoPRINTLN, mas encontrado '}'
+```
+
+Erros que só aparecem ao rodar, como divisão por zero ou uma letra digitada onde se esperava um número, encerram o programa com `padoERRO de execução (linha N): ...`.
+
+### 5. Use um editor com suporte à padolang
+
+Na página de [Releases](https://github.com/theodoroferreira/padolang/releases) também está o `padolang-0.1.0.vsix`, a extensão para **VS Code** e **Cursor**: cores, erros sublinhados enquanto se digita, formatação com `Shift+Alt+F` e um botão ▷ que executa o arquivo num terminal. Para instalar, "Extensions: Install from VSIX..." no editor, ou:
 
 ```bash
-sudo apt install openjdk-21-jdk gcc
+code --install-extension padolang-0.1.0.vsix
 ```
 
-## Compilação e execução
+A extensão já traz o transpilador; só precisa do Java 21 e, para executar, do gcc. Detalhes em [`editores/vscode/README.md`](editores/vscode/README.md).
+
+### 6. Próximos passos
+
+A pasta `exemplos/` tem programas prontos para rodar e modificar:
+
+| Exemplo | O que mostra |
+|---|---|
+| `ola_mundo` | o primeiro programa |
+| `tabuada` | entrada com `padoIN` e laço `papapadoin` |
+| `par_ou_impar` | o operador de resto `padoMOD` |
+| `media_notas` | `padoinquanto`, reais e `oin pad` |
+| `saudacao` | textos, concatenação, lógicos e função que devolve `padoSTRING` |
+| `fatorial` | função recursiva |
+| `fibonacci` | os 15 primeiros números de Fibonacci |
+| `primos` | função lógica, `padBREAK` e `padCONTINUE` |
 
 ```bash
-git clone https://github.com/theodoroferreira/padolang.git
-cd padolang
-
-./compilar.sh                                  # compila o transpilador em out/
-./padolang.sh exemplos/tabuada.padoin          # transpila, compila e executa
+padolang run exemplos/tabuada.padoin
 ```
 
-O `padolang.sh` é um atalho para `bin/padolang run --dir saida` (ver abaixo): recompila o transpilador se algum `.java` mudou, gera `saida/<nome>.c`, compila com `gcc -std=c11 -fwrapv` e executa o programa. Opções:
-
-```bash
-./padolang.sh arquivo.padoin --tokens   # mostra a tabela de tokens
-./padolang.sh arquivo.padoin --ast      # mostra a árvore sintática
-```
-
-Para só gerar o C, sem compilar nem executar:
-
-```bash
-java -cp out padolang.Main arquivo.padoin -o saida.c
-```
-
-### CLI (`bin/padolang`)
-
-O `compilar.sh` também empacota o transpilador em `out/padolang.jar`. O `bin/padolang` (ou `bin/padolang.cmd`, no Windows) chama esse jar e o recompila sozinho se algum `.java` mudou:
-
-```bash
-bin/padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar C
-bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
-bin/padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
-bin/padolang fmt    arquivo.padoin... [--check | --stdout]  # formata os arquivos
-bin/padolang lsp                                 # servidor LSP (stdin/stdout), usado pelos editores
-bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens (--editor: comentários e todos os erros léxicos)
-bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
-bin/padolang --help | --version
-```
-
-O `check --json` imprime os erros com fase, código (`L1`..`L7`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
-
-O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
-
-O `fmt` formata no próprio arquivo: 2 espaços por bloco, um comando por linha, `{` na mesma linha, `} oin {`, espaços em volta dos operadores binários, comentários preservados e no máximo uma linha em branco seguida. Com `--stdout` só imprime o resultado; com `--check` só confere e sai com 1 se algum arquivo mudaria. Um arquivo com erro léxico ou sintático não é alterado, e o formatador confere que o resultado tem exatamente os mesmos tokens do original.
-
-O `lsp` é um servidor [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) sem dependências (JSON e JSON-RPC escritos à mão): mostra os erros no editor enquanto se digita (com o código `L`, `S` ou `R` e o trecho sublinhado), dá as cores por Semantic Tokens (parâmetros diferentes de variáveis, por exemplo) e formata o documento com o mesmo formatador do `fmt`. As colunas da padolang contam code points e as do LSP contam unidades UTF-16; a conversão fica em `lsp/Posicoes.java` (um 👍 é 1 coluna na padolang e 2 no editor).
-
-Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os editores vão achar a padolang):
-
-```bash
-export PATH="$PWD/bin:$PATH"     # no ~/.bashrc ou ~/.zshrc, com o caminho completo
-```
-
-### Extensão VS Code / Cursor (`editores/vscode/`)
-
-Cores (gramática TextMate e Semantic Tokens), erros sublinhados enquanto se digita, formatação (`Shift+Alt+F`) e o comando "Padolang: Executar arquivo", que roda o programa num terminal integrado com entrada pelo teclado. Precisa do Java 21. O `.vsix` pronto está nas [Releases](https://github.com/theodoroferreira/padolang/releases); para gerar a partir do código:
-
-```bash
-./compilar.sh
-cd editores/vscode && npm install && npm run empacotar   # gera padolang-0.1.0.vsix, com o jar dentro
-code --install-extension padolang-0.1.0.vsix             # ou "Extensions: Install from VSIX..." no VS Code ou no Cursor
-```
-
-Detalhes e configurações em [`editores/vscode/README.md`](editores/vscode/README.md).
-
-## A linguagem
+## Referência da linguagem
 
 Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... }`, e as funções são declaradas antes do bloco principal. Quando uma escolha não é temática, a padolang segue o **Java**; as decisões estão registradas em [`docs/decisoes.md`](docs/decisoes.md).
 
@@ -209,7 +296,69 @@ A especificação formal (alfabeto Σ, tabela de tokens e gramática em EBNF) es
 
 A semântica mostra todos os erros encontrados, um por linha, com linha e coluna.
 
-## Testes
+## Linha de comando
+
+```bash
+padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
+padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar C
+padolang build  arquivo.padoin [-o saida.c]  # gera o C
+padolang fmt    arquivo.padoin... [--check | --stdout]  # formata os arquivos
+padolang tokens arquivo.padoin [--editor]    # lista os tokens (--editor: comentários e todos os erros léxicos)
+padolang ast    arquivo.padoin               # mostra a árvore sintática
+padolang lsp                                 # servidor LSP (stdin/stdout), usado pelos editores
+padolang --help | --version
+```
+
+O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
+
+O `check --json` imprime os erros com fase, código (`L1`..`L7`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+
+O `fmt` formata no próprio arquivo: 2 espaços por bloco, um comando por linha, `{` na mesma linha, `} oin {`, espaços em volta dos operadores binários, comentários preservados e no máximo uma linha em branco seguida. Com `--stdout` só imprime o resultado; com `--check` só confere e sai com 1 se algum arquivo mudaria. Um arquivo com erro léxico ou sintático não é alterado, e o formatador confere que o resultado tem exatamente os mesmos tokens do original.
+
+O `lsp` é um servidor [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) sem dependências (JSON e JSON-RPC escritos à mão): mostra os erros no editor enquanto se digita (com o código `L`, `S` ou `R` e o trecho sublinhado), dá as cores por Semantic Tokens (parâmetros diferentes de variáveis, por exemplo) e formata o documento com o mesmo formatador do `fmt`. As colunas da padolang contam code points e as do LSP contam unidades UTF-16; a conversão fica em `lsp/Posicoes.java` (um 👍 é 1 coluna na padolang e 2 no editor).
+
+## Desenvolvimento
+
+### Como funciona
+
+```
+arquivo.padoin → LÉXICO → TOKENS → PARSER → AST → SEMÂNTICA → CÓDIGO C → gcc → executável
+```
+
+| Etapa | Onde está | O que faz |
+|---|---|---|
+| Análise léxica | `src/padolang/lexer/` | transforma o texto em tokens, com linha e coluna |
+| Análise sintática | `src/padolang/parser/` | parser por descida recursiva, com um método por produção da gramática; constrói a AST |
+| AST | `src/padolang/ast/` | árvore sintática abstrata (records Java) |
+| Análise semântica | `src/padolang/semantica/` | tabela de funções, tabela de símbolos com pilha de escopos e regras de tipo; anota o tipo de cada expressão |
+| Geração de código | `src/padolang/gerador/` | percorre a AST e emite C, com as funções auxiliares de execução que o programa usar |
+
+### Compilar a partir do código
+
+Precisa do **JDK 21** ou superior (no Ubuntu, `sudo apt install openjdk-21-jdk gcc`), do **gcc** e do **bash** (Linux, macOS ou WSL).
+
+```bash
+git clone https://github.com/theodoroferreira/padolang.git
+cd padolang
+
+./compilar.sh                                  # compila o transpilador em out/ e gera out/padolang.jar
+./padolang.sh exemplos/tabuada.padoin          # transpila, compila e executa
+```
+
+No repositório, o `bin/padolang` (ou `bin/padolang.cmd`, no Windows) recompila o jar sozinho se algum `.java` mudou. O `padolang.sh` é um atalho para `bin/padolang run --dir saida`, que deixa o C gerado em `saida/<nome>.c`; ele também aceita `--tokens` e `--ast`. Para só gerar o C, sem o jar:
+
+```bash
+java -cp out padolang.Main arquivo.padoin -o saida.c
+```
+
+A extensão VS Code fica em `editores/vscode/` e é empacotada com o jar dentro:
+
+```bash
+./compilar.sh
+cd editores/vscode && npm install && npm run empacotar   # gera padolang-0.1.0.vsix
+```
+
+### Testes
 
 ```bash
 ./testar.sh        # resultado de cada caso
@@ -240,7 +389,11 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_funcao` | função com dois parâmetros e condicional |
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
-A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão VS Code e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
+Os outros scripts conferem as ferramentas: `testar-lexer-editor.sh` (léxico no modo editor), `testar-cli.sh` (subcomandos, `--json`, `run` e códigos de saída), `testar-formatador.sh` (casos de `testes/formatador/` e idempotência) e `testar-lsp.sh` (sessão gravada em `testes/lsp/`).
+
+### Integração contínua e versões
+
+A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda os cinco scripts de teste; depois confere a gramática da extensão VS Code e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
 
 Para publicar uma versão, atualize `VERSAO` em `src/padolang/cli/Cli.java` e `version` em `editores/vscode/package.json` e envie uma tag com o mesmo número:
 
@@ -251,7 +404,7 @@ git push origin v0.1.0
 
 O workflow `release.yml` confere se a tag bate com as duas versões, roda os mesmos testes e cria a Release com o `padolang-<versão>.zip` (lançadores `bin/`, `out/padolang.jar` já compilado, exemplos) e o `padolang-<versão>.vsix`.
 
-## Estrutura do repositório
+### Estrutura do repositório
 
 ```
 padolang/
