@@ -9,6 +9,11 @@ package padolang.lexer;
 public record Token(TokenType tipo, String lexema, int linha, int coluna, int tamanho) {
     @Override
     public String toString() {
-        return String.format("%-5d %-5d %-13s %s", linha, coluna, tipo, lexema);
+        return String.format("%-5d %-5d %-13s %s", linha, coluna, tipo, lexemaEmUmaLinha());
+    }
+
+    /** O lexema para listagens: as quebras de linha de um comentário de bloco aparecem como "\n". */
+    public String lexemaEmUmaLinha() {
+        return lexema.replace("\r", "").replace("\n", "\\n");
     }
 }

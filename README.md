@@ -75,12 +75,12 @@ bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
 bin/padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
 bin/padolang fmt    arquivo.padoin... [--check | --stdout]  # formata os arquivos
 bin/padolang lsp                                 # servidor LSP (stdin/stdout), usado pelos editores
-bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens
+bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens (--editor: comentários e todos os erros léxicos)
 bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
 bin/padolang --help | --version
 ```
 
-O `check --json` imprime os erros com fase, código (`L1`..`L6`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+O `check --json` imprime os erros com fase, código (`L1`..`L7`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
 
 O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
 
@@ -132,7 +132,7 @@ Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... 
 | Função | `padUNCTION padoINTER soma(padoINTER a, padoINTER b) { }` | `int pad_soma(int pad_a, int pad_b) { }` |
 | Retorno | `padOUT a + b👍` | `return pad_a + pad_b;` |
 | Chamada como comando | `mostra(3)👍` | `pad_mostra(3);` |
-| Comentário | `# até o fim da linha` | — |
+| Comentário | `# até o fim da linha` ou `#* várias linhas *#` | — |
 
 ### Tipos
 
@@ -183,6 +183,7 @@ Isso vale para divisão ou `padoMOD` inteiro por zero, entrada inválida ou fim 
 - Uma variável declarada sem valor começa com o valor nulo do tipo: `0`, `0.0`, `padoFALSE` ou `""`.
 - No C gerado, todo identificador recebe o prefixo `pad_`. Assim nomes como `int` ou `main` continuam válidos na padolang.
 - No `papapadoin`, a inicialização e o passo são opcionais.
+- O comentário de bloco vai de `#*` até o primeiro `*#` e não aninha; sem o `*#`, é erro léxico (`L7`).
 - `5--3` é erro sintático: pelo maior casamento, `--` é o decremento (como no Java e no C). Escreva `5 - -3`.
 - A memória dos textos criados por concatenação e leitura não é liberada; os programas padolang são curtos.
 

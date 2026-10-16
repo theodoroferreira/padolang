@@ -3,7 +3,7 @@
 Suporte aos arquivos `.padoin` da [padolang👍](https://github.com/theodoroferreira/padolang):
 
 - **cores**: a gramática TextMate colore palavras reservadas, tipos, números, textos, comentários e o `👍` assim que o arquivo abre, mesmo sem Java. Quando o servidor sobe, as cores semânticas completam a gramática: parâmetros aparecem diferentes das variáveis e as funções são reconhecidas;
-- **erros enquanto se digita**: léxicos (`L1`..`L6`), sintáticos (`S1`) e semânticos (`R1`..`R21`), sublinhados exatamente no trecho do erro;
+- **erros enquanto se digita**: léxicos (`L1`..`L7`), sintáticos (`S1`) e semânticos (`R1`..`R21`), sublinhados exatamente no trecho do erro;
 - **formatação**: `Shift+Alt+F` (ou "Format Document") usa o mesmo formatador do `padolang fmt`. Para formatar ao salvar, acrescente em `settings.json`:
   ```json
   "[padolang]": { "editor.formatOnSave": true }

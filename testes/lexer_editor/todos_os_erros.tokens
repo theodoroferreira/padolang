@@ -35,9 +35,9 @@ LIN   COL   TAM  TIPO          LEXEMA
 6     1     1    FECHA_CHAVE   }
 7     1     5    COMENTARIO    # fim
 7     6     0    EOF           <fim>
-L3 padoERRO léxico (linha 3, coluna 13): string não fechada
-L6 padoERRO léxico (linha 4, coluna 20): caractere inválido 'ç' (U+00E7)
-L2 padoERRO léxico (linha 4, coluna 24): lexema inválido '2x...' (identificadores não podem começar com dígito)
-L1 padoERRO léxico (linha 4, coluna 29): número real malformado '3.' (esperado dígito após o ponto)
-L5 padoERRO léxico (linha 5, coluna 8): '!' isolado não é um operador válido (use !=)
-L4 padoERRO léxico (linha 5, coluna 26): sequência de escape inválida na string
+L3 padoERRO léxico (linha 3, coluna 13): string não fechada [lexema: "aberto)👍]
+L6 padoERRO léxico (linha 4, coluna 20): caractere inválido 'ç' (U+00E7) [lexema: ç]
+L2 padoERRO léxico (linha 4, coluna 24): lexema inválido '2x' (identificadores não podem começar com dígito) [lexema: 2x]
+L1 padoERRO léxico (linha 4, coluna 29): número real malformado '3.' (esperado dígito após o ponto) [lexema: 3.]
+L5 padoERRO léxico (linha 5, coluna 8): '!' isolado não é um operador válido (use !=) [lexema: !]
+L4 padoERRO léxico (linha 5, coluna 26): sequência de escape inválida na string [lexema: \q]

@@ -4,7 +4,7 @@ package padolang.diagnostico;
  * Um problema encontrado no fonte, em forma estruturada: é o que a CLI (--json) e o editor (LSP)
  * consomem. O texto "padoERRO ..." mostrado no terminal é só uma forma de exibi-lo (formatar()).
  *
- * Códigos: L1..L6 (léxico), S1 (sintático) e R1..R21 (semântico, como em docs/semantica.md).
+ * Códigos: L1..L7 (léxico), S1 (sintático) e R1..R21 (semântico, como em docs/semantica.md).
  * Linha e coluna começam em 1 e contam code points; tamanho é o número de code points do trecho
  * apontado (0 quando não há trecho, como no fim do arquivo).
  */

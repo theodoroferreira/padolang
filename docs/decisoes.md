@@ -85,6 +85,15 @@ padoERRO de execução (linha 7): divisão por zero
 | `12345678.0` | `1.2345678E7` |
 | `0.0001` | `1.0E-4` |
 
+## Comentários
+
+| Comentário | Sintaxe | Observação |
+|---|---|---|
+| De linha | `# ...` | vai até o fim da linha |
+| De bloco | `#* ... *#` | pode ocupar várias linhas ou ficar no meio de uma |
+
+O comentário de bloco **não aninha**: fecha no primeiro `*#`, como o `/* */` do Java e do C. Com aninhamento, os comentários deixariam de ser uma linguagem regular (seria preciso contar aberturas e fechamentos), e o léxico é todo feito de padrões regulares. Um `#*` sem `*#` é erro léxico (`L7`), apontado na posição da abertura. Dentro de um texto (`"#* ... *#"`) e de um comentário de linha, `#*` não abre nada.
+
 ## Palavras reservadas novas
 
 `padAND`, `padOR`, `padNOT`, `padoMOD`, `padoPRINTLN`, `padoinquanto`, `padBREAK`, `padCONTINUE`.

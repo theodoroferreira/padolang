@@ -172,3 +172,28 @@ PADOIN {
         (operador)
         (booleano)
         (joinha)))))
+
+================================================================================
+Comentário de bloco: várias linhas, no meio da linha e seguido de comentário de linha
+================================================================================
+
+#* cabeçalho
+   "aspas" e { chaves sem par
+*#
+PADOIN {
+  padoPRINTLN(#* dentro *# 1)👍 #**# # de linha
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (comment)
+  (programa
+    corpo: (bloco
+      (palavra_reservada)
+      (parenteses
+        (comment)
+        (numero))
+      (joinha)
+      (comment)
+      (comment))))

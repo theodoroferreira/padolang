@@ -441,15 +441,54 @@
     "comment": {
       "type": "TOKEN",
       "content": {
-        "type": "SEQ",
+        "type": "CHOICE",
         "members": [
           {
-            "type": "STRING",
-            "value": "#"
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "#"
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SEQ",
+                    "members": [
+                      {
+                        "type": "PATTERN",
+                        "value": "[^*\\n]"
+                      },
+                      {
+                        "type": "PATTERN",
+                        "value": "[^\\n]*"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "BLANK"
+                  }
+                ]
+              }
+            ]
           },
           {
-            "type": "PATTERN",
-            "value": "[^\\n]*"
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "#*"
+              },
+              {
+                "type": "PATTERN",
+                "value": "([^*]|\\*+[^*#])*\\*+"
+              },
+              {
+                "type": "STRING",
+                "value": "#"
+              }
+            ]
           }
         ]
       }

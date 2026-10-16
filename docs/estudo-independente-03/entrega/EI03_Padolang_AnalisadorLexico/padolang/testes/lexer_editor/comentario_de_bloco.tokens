@@ -1,0 +1,21 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     4    COMENTARIO    #**#
+1     6     5    COMENTARIO    #***#
+1     12    22   COMENTARIO    #* # não é de linha *#
+1     35    1    NUM_INT       1
+1     36    1    JOINHA        👍
+2     1     40   COMENTARIO    #* várias\n   linhas, com * e # soltos\n*#
+4     4     6    PROGRAMA      PADOIN
+4     11    1    ABRE_CHAVE    {
+4     13    15   COMENTARIO    #* "aspas" { *#
+5     3     11   ESCRITA_LINHA padoPRINTLN
+5     14    1    ABRE_PAR      (
+5     15    29   STRING        "#* texto, não comentário *#"
+5     44    1    FECHA_PAR     )
+5     45    1    JOINHA        👍
+5     47    24   COMENTARIO    # de linha com #* dentro
+6     3     27   COMENTARIO    # *# sozinho não fecha nada
+7     1     1    FECHA_CHAVE   }
+8     1     43   COMENTARIO    #*\n  fim de linha CRLF dentro do bloco\n*#
+11    1     0    EOF           <fim>

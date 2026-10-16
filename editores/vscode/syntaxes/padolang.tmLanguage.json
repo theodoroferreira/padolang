@@ -4,6 +4,7 @@
   "scopeName": "source.padolang",
   "fileTypes": ["padoin"],
   "patterns": [
+    { "include": "#comentario-de-bloco" },
     { "include": "#comentario" },
     { "include": "#texto" },
     { "include": "#numero" },
@@ -16,6 +17,17 @@
     { "include": "#identificador" }
   ],
   "repository": {
+    "comentario-de-bloco": {
+      "name": "comment.block.padolang",
+      "begin": "#\\*",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.comment.begin.padolang" }
+      },
+      "end": "\\*#",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.comment.end.padolang" }
+      }
+    },
     "comentario": {
       "name": "comment.line.number-sign.padolang",
       "match": "(#).*$",

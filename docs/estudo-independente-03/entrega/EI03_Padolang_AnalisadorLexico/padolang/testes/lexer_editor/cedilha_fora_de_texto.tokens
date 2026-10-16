@@ -1,0 +1,22 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     6    PROGRAMA      PADOIN
+1     8     1    ABRE_CHAVE    {
+2     3     6    DECLARA       padoin
+2     10    9    TIPO_INTER    padoINTER
+2     20    1    ID            a
+2     21    1    ERRO          ç
+2     22    1    ERRO          ã
+2     23    1    ID            o
+2     25    1    ATRIB         =
+2     27    1    NUM_INT       1
+2     28    1    JOINHA        👍
+3     3     11   ESCRITA_LINHA padoPRINTLN
+3     14    1    ABRE_PAR      (
+3     15    6    STRING        "ação"
+3     21    1    FECHA_PAR     )
+3     22    1    JOINHA        👍
+4     1     1    FECHA_CHAVE   }
+5     1     0    EOF           <fim>
+L6 padoERRO léxico (linha 2, coluna 21): caractere inválido 'ç' (U+00E7) [lexema: ç]
+L6 padoERRO léxico (linha 2, coluna 22): caractere inválido 'ã' (U+00E3) [lexema: ã]

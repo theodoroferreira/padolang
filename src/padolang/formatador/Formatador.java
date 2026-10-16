@@ -25,6 +25,8 @@ import static padolang.lexer.TokenType.*;
  *   - sem espaço entre o nome e o '(' em chamadas, padoPRINT, padoIN e padoINTER(...);
  *     um espaço entre pad, papapadoin ou padoinquanto e o '(';
  *   - comentário em linha própria fica na indentação do bloco; no fim da linha, depois de um espaço;
+ *   - comentário de bloco (#* ... *#) mantém o texto original, inclusive as quebras de linha de
+ *     dentro dele; no meio de uma linha, fica entre espaços e não quebra a linha;
  *   - no máximo uma linha em branco seguida, nenhuma no começo ou no fim de um bloco;
  *   - o arquivo termina com uma quebra de linha (CRLF se o original usava CRLF).
  *
@@ -138,11 +140,19 @@ public final class Formatador {
         }
 
         private void escrever(Token t) {
-            // comentário na mesma linha do token anterior: fica no fim da linha, depois de um espaço
-            if (t.tipo() == COMENTARIO && anterior != null && t.linha() == anterior.linha()) {
-                linha.append(' ').append(t.lexema().stripTrailing());
+            // comentário na mesma linha do token anterior: continua nela, depois de um espaço
+            if (t.tipo() == COMENTARIO && anterior != null && t.linha() == ultimaLinha(anterior)) {
+                if (!ehBloco(t)) {
+                    linha.append(' ').append(texto(t));
+                    quebrar = true;                     // o de linha vai até o fim dela
+                } else {
+                    // o de bloco não muda a quebra pendente (a de um 👍 antes dele, por exemplo)
+                    if (ehBloco(anterior) || espaco(anteriorCodigo, anteriorEraUnario, t)) {
+                        linha.append(' ');
+                    }
+                    linha.append(texto(t));
+                }
                 anterior = t;
-                quebrar = true;
                 return;
             }
 
@@ -160,8 +170,8 @@ public final class Formatador {
             if (quebrar || linha.isEmpty()) {
                 novaLinha(t);
                 linha.append(INDENTACAO.repeat(Math.max(nivel, 0)));
-            } else if (espaco(anteriorCodigo, anteriorEraUnario, t)) {
-                linha.append(' ');
+            } else if (ehBloco(anterior) || espaco(anteriorCodigo, anteriorEraUnario, t)) {
+                linha.append(' ');                      // depois de um comentário de bloco, sempre
             }
             linha.append(texto(t));
 
@@ -186,7 +196,7 @@ public final class Formatador {
             fecharLinha();
             if (primeira || anterior == null) return;
 
-            boolean havia = t.linha() - anterior.linha() >= 2;
+            boolean havia = t.linha() - ultimaLinha(anterior) >= 2;
             // "{" no fim da linha anterior, com ou sem comentário depois dele
             boolean inicioDeBloco = anteriorCodigo != null && anteriorCodigo.tipo() == ABRE_CHAVE
                     && anteriorCodigo.linha() == anterior.linha();
@@ -201,6 +211,16 @@ public final class Formatador {
                 saida.add(linha.toString().stripTrailing());
                 linha.setLength(0);
             }
+        }
+
+        /** Um comentário de bloco: #* ... *# (o de linha é # ...). */
+        private static boolean ehBloco(Token t) {
+            return t != null && t.tipo() == COMENTARIO && t.lexema().startsWith("#*");
+        }
+
+        /** A linha em que o token termina: só é outra num comentário de bloco de várias linhas. */
+        private static int ultimaLinha(Token t) {
+            return t.linha() + (int) t.lexema().chars().filter(c -> c == '\n').count();
         }
 
         /** O '-' atual é unário se vier no início, depois de operador, '(', ',', '=' ou padOUT. */

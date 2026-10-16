@@ -9,6 +9,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import static padolang.lexer.TokenType.*;
 
@@ -23,7 +24,7 @@ import static padolang.lexer.TokenType.*;
  * chaves desde o padUNCTION.
  *
  * Codificação: 5 inteiros por token, [Δlinha, Δcaractere, tamanho, tipo, modificadores], em ordem de
- * posição. Δcaractere é relativo ao token anterior só quando os dois estão na mesma linha. Linha e
+ * posição (um comentário de bloco de várias linhas vira um token por linha). Δcaractere é relativo ao token anterior só quando os dois estão na mesma linha. Linha e
  * caractere estão em UTF-16 (ver Posicoes).
  */
 public final class TokensSemanticos {
@@ -56,8 +57,7 @@ public final class TokensSemanticos {
         }
         Posicoes posicoes = new Posicoes(fonte);
 
-        int[] data = new int[tokens.size() * 5];
-        int n = 0;
+        IntStream.Builder data = IntStream.builder();
         int linhaAnterior = 0, caractereAnterior = 0;
 
         Set<String> parametros = null;   // parâmetros da função em que estamos (null: fora de função)
@@ -123,17 +123,26 @@ public final class TokensSemanticos {
             }
             if (tipo < 0) continue;                          // ( ) , e { } ficam sem cor semântica
 
-            int linha = t.linha() - 1;
-            int caractere = posicoes.utf16(t.linha(), t.coluna());
-            int tamanho = posicoes.tamanhoUtf16(t.linha(), t.coluna(), t.tamanho());
-            data[n++] = linha - linhaAnterior;
-            data[n++] = linha == linhaAnterior ? caractere - caractereAnterior : caractere;
-            data[n++] = tamanho;
-            data[n++] = tipo;
-            data[n++] = modificadores;
-            linhaAnterior = linha;
-            caractereAnterior = caractere;
+            // Um comentário de bloco pode ocupar várias linhas, e um token semântico não: vai um por linha
+            String[] partes = t.tipo() == COMENTARIO ? t.lexema().split("\n", -1) : new String[] { null };
+            for (int p = 0; p < partes.length; p++) {
+                int linhaDoTrecho = t.linha() + p;
+                int colunaDoTrecho = p == 0 ? t.coluna() : 1;
+                int codePoints = partes.length == 1 ? t.tamanho() : partes[p].codePointCount(0, partes[p].length());
+
+                int linha = linhaDoTrecho - 1;
+                int caractere = posicoes.utf16(linhaDoTrecho, colunaDoTrecho);
+                int tamanho = posicoes.tamanhoUtf16(linhaDoTrecho, colunaDoTrecho, codePoints);
+                if (tamanho == 0) continue;                  // linha em branco dentro do comentário
+                data.add(linha - linhaAnterior);
+                data.add(linha == linhaAnterior ? caractere - caractereAnterior : caractere);
+                data.add(tamanho);
+                data.add(tipo);
+                data.add(modificadores);
+                linhaAnterior = linha;
+                caractereAnterior = caractere;
+            }
         }
-        return java.util.Arrays.copyOf(data, n);
+        return data.build().toArray();
     }
 }

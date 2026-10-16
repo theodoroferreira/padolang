@@ -1,0 +1,12 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     6    PROGRAMA      PADOIN
+1     8     1    ABRE_CHAVE    {
+2     3     11   ESCRITA_LINHA padoPRINTLN
+2     14    1    ABRE_PAR      (
+2     15    1    NUM_INT       1
+2     16    1    FECHA_PAR     )
+2     17    1    JOINHA        👍
+2     19    31   ERRO          #*# não fecha: o * é do "#*"\n}\n
+4     1     0    EOF           <fim>
+L7 padoERRO léxico (linha 2, coluna 19): comentário de bloco não fechado (falta o '*#') [lexema: #*]

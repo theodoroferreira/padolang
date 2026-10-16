@@ -16,8 +16,9 @@ import java.util.Map;
  *
  * Dois modos:
  *   - COMPILADOR (padrão): comentários são descartados e o primeiro erro lança LexicoException;
- *   - EDITOR (formatter e LSP): comentários viram tokens COMENTARIO e cada erro vira um token ERRO,
- *     com o diagnóstico guardado em erros(); a análise continua depois do trecho inválido.
+ *   - EDITOR (formatter, LSP e "padolang tokens --editor"): comentários viram tokens COMENTARIO e
+ *     cada erro vira um token ERRO, com o diagnóstico guardado em erros(); a análise continua depois
+ *     do trecho inválido.
  * Nos dois modos os demais tokens são os mesmos.
  */
 public class Lexer {
@@ -116,14 +117,40 @@ public class Lexer {
         return erros;
     }
 
-    /** #[^\n]*  — comentário até o fim da linha: descartado, ou um token COMENTARIO no modo EDITOR. */
+    /**
+     * Comentários. Os dois padrões começam por '#', e o símbolo seguinte decide qual é (um símbolo
+     * de lookahead):
+     *   linha:  #([^*\n][^\n]*)?           — até o fim da linha;
+     *   bloco:  #\*([^*]|\*+[^*#])*\*+#     — de "#*" até o primeiro "*#", em uma ou mais linhas.
+     * São descartados, ou viram um token COMENTARIO no modo EDITOR.
+     */
     private void comentario(int l, int col) {
+        avancar(); // '#'
+        if (!fim() && atual() == '*') {
+            comentarioDeBloco(l, col);
+            return;
+        }
         while (!fim() && atual() != '\n') {
             avancar();
         }
         if (modo == Modo.EDITOR) {
             emitir(TokenType.COMENTARIO, trecho(), l, col);
         }
+    }
+
+    /** O resto do comentário de bloco, depois do '#'. Não aninha: fecha no primeiro "*#". */
+    private void comentarioDeBloco(int l, int col) {
+        avancar(); // '*'
+        while (!fim()) {
+            if (avancar() == '*' && casar('#')) {
+                if (modo == Modo.EDITOR) {
+                    emitir(TokenType.COMENTARIO, trecho(), l, col);
+                }
+                return;
+            }
+        }
+        // O erro aponta o "#*" que ficou aberto; no modo EDITOR o trecho até o fim do arquivo vira ERRO
+        falha("L7", "comentário de bloco não fechado (falta o '*#')", l, col, 2);
     }
 
     /** [a-zA-Z_][a-zA-Z0-9_]*  — depois consulta a tabela de reservadas. */
@@ -136,7 +163,7 @@ public class Lexer {
         emitir(RESERVADAS.getOrDefault(lexema, TokenType.ID), lexema, l, col);
     }
 
-    /** [0-9]+ (NUM_INT)  ou  [0-9]+\.[0-9]+ (NUM_FLOAT). */
+    /** [0-9]+ (NUM_INT)  ou  [0-9]+\.[0-9]+ (NUM_FLOAT): no máximo um ponto, com dígitos dos dois lados. */
     private void numero(int l, int col) {
         StringBuilder sb = new StringBuilder();
         lerDigitos(sb);
@@ -150,6 +177,15 @@ public class Lexer {
             }
             lerDigitos(sb);
             tipo = TokenType.NUM_FLOAT;
+
+            if (!fim() && atual() == '.') {
+                // 1.2.3: o lexema inteiro é um erro só, em vez de um real seguido de um '.' solto
+                while (!fim() && (ehDigito(atual()) || atual() == '.')) {
+                    avancar();
+                }
+                falha("L1", "número real malformado '" + trecho() + "' (mais de um ponto decimal)", l, col, pos - inicio);
+                return;
+            }
         }
 
         if (!fim() && ehLetra(atual())) {
@@ -158,8 +194,8 @@ public class Lexer {
             while (fimTrecho < cp.length && (ehLetra(cp[fimTrecho]) || ehDigito(cp[fimTrecho]))) {
                 fimTrecho++;
             }
-            falhaSemToken("L2", "lexema inválido '" + sb + Character.toString(atual())
-                    + "...' (identificadores não podem começar com dígito)", l, col, fimTrecho - inicio);
+            falhaSemToken("L2", "lexema inválido '" + new String(cp, inicio, fimTrecho - inicio)
+                    + "' (identificadores não podem começar com dígito)", l, col, fimTrecho - inicio);
             while (pos < fimTrecho) {
                 avancar();
             }

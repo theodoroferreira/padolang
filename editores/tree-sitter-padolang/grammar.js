@@ -11,7 +11,7 @@
  *   - declaracao `padoin <tipo> nome`, para marcar o nome declarado;
  *   - chamada `nome(...)`, para colorir o nome como função.
  *
- * Os léxicos seguem o Lexer.java: identificadores só com letras ASCII, `#` até o fim da linha,
+ * Os léxicos seguem o Lexer.java: identificadores só com letras ASCII, `#` até o fim da linha, `#* ... *#`,
  * textos com os escapes \n \t \" \\ e o 👍 com tom de pele e seletor de variação opcionais.
  */
 
@@ -98,7 +98,13 @@ module.exports = grammar({
     joinha: _ => /\u{1F44D}[\u{1F3FB}-\u{1F3FF}]?\u{FE0F}?/u,
 
     // O nome em inglês é de propósito: o `tree-sitter test` só lê as asserções dos testes de cores
-    // (test/highlight/) em nós cujo nome contém "comment"
-    comment: _ => token(seq('#', /[^\n]*/)),
+    // (test/highlight/) em nós cujo nome contém "comment".
+    // De linha: `#` até o fim da linha, desde que não comece por `#*`; de bloco: de `#*` até o
+    // primeiro `*#`. O de linha exclui o `*` porque o Tree-sitter fica com o maior casamento, e
+    // `#* a *# x` casaria inteiro como comentário de linha.
+    comment: _ => token(choice(
+      seq('#', optional(seq(/[^*\n]/, /[^\n]*/))),
+      seq('#*', /([^*]|\*+[^*#])*\*+/, '#'),
+    )),
   },
 });

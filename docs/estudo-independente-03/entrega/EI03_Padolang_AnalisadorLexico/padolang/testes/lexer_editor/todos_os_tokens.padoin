@@ -1,0 +1,71 @@
+#* Caso de teste válido do analisador léxico.
+   O programa está correto e usa todas as classes de token da padolang:
+   as 23 palavras reservadas, identificadores, números inteiros e reais,
+   textos, todos os operadores, os delimitadores e os dois tipos de comentário. *#
+
+# funções: padUNCTION, os tipos, a vírgula e o padOUT
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+  padOUT a + b👍
+}
+
+padUNCTION padoOLEAN ehPar(padoINTER n) {
+  padOUT n padoMOD 2 == 0👍
+}
+
+PADOIN {
+  # declarações, com um literal de cada tipo
+  padoin padoINTER limite👍
+  padoin padoINTER i = 0👍
+  padoin padoINTER pares = 0👍
+  padoin padoFLOAT media = 7.25👍
+  padoin padoOLEAN ligado = padoTRUE👍
+  padoin padoOLEAN desligado = padoFALSE👍
+  padoin padoSTRING nome_1 = "Padoin"👍
+  padoin padoSTRING _escapes = "tab:\t aspas:\" barra:\\ # nao e comentario"👍
+
+  # identificadores que começam como palavras reservadas (maior casamento)
+  padoin padoINTER padoinho = 1👍
+  padoin padoINTER pad_2 = 2👍
+  padoin padoINTER oinX = 3👍
+
+  # entrada e saída
+  padoPRINT("Limite: ")👍
+  padoIN(limite)👍
+  padoPRINTLN()👍
+
+  # operadores aritméticos, com e sem espaços em volta
+  media = (media + 2.75) * 3 / 2 - 0.5👍
+  padoinho = soma(pad_2, oinX)*2-1👍
+  padoinho++👍
+  pad_2--👍
+  oinX = 5 - -3👍
+
+  # operadores relacionais e lógicos
+  pad (limite >= 10 padAND limite <= 100) {
+    padoPRINTLN("entre 10 e 100")👍
+  } oin pad (limite<10 padOR limite>100) {
+    padoPRINTLN("fora da faixa")👍
+  } oin {
+    padoPRINTLN("impossivel")👍
+  }
+  pad (padNOT desligado padAND ligado != desligado) {
+    padoPRINTLN(nome_1 + _escapes)👍
+  }
+
+  # repetições: papapadoin, padoinquanto, padBREAK e padCONTINUE
+  papapadoin (i = 1, i < limite, i++) {
+    pad (padNOT ehPar(i)) {
+      padCONTINUE👍
+    }
+    pares++👍
+  }
+  padoinquanto (padoTRUE) {
+    pad (pares == 0 padOR pares > 3) {
+      padBREAK👍
+    }
+    pares--👍
+  }
+
+  padoPRINTLN(media)👍🏽   #* o 👍 com tom de pele é o mesmo token *#
+  padoPRINTLN(padoinho + pad_2 + oinX + pares)👍
+}

@@ -68,7 +68,7 @@ public class Cli {
                      --check                 só confere: sai com 1 se algum arquivo mudaria
                      --stdout                só imprime o resultado, sem gravar
               lsp                            servidor LSP por stdin/stdout (usado pelos editores)
-              tokens <arquivo> [--editor]    lista os tokens (--editor: comentários e erros também)
+              tokens <arquivo> [--editor]    lista os tokens (--editor: comentários e todos os erros léxicos)
               ast    <arquivo>               mostra a árvore sintática
 
             Opções:
@@ -349,19 +349,32 @@ public class Cli {
         out.println();
     }
 
-    /** Lista os tokens do modo EDITOR e os erros léxicos; devolve 1 se houver algum erro. */
+    /**
+     * Lista os tokens do modo EDITOR e, depois deles, os erros léxicos, cada um com o código, a
+     * posição, a mensagem e o lexema apontado; devolve 1 se houver algum erro.
+     */
     private int tokensEditor(String fonte) {
         Lexer lexer = new Lexer(fonte, Lexer.Modo.EDITOR);
         List<Token> tokens = lexer.tokenizar();
         out.println("== TOKENS (editor) ==");
         out.printf("%-5s %-5s %-4s %-13s %s%n", "LIN", "COL", "TAM", "TIPO", "LEXEMA");
         for (Token t : tokens) {
-            out.printf("%-5d %-5d %-4d %-13s %s%n", t.linha(), t.coluna(), t.tamanho(), t.tipo(), t.lexema());
+            out.printf("%-5d %-5d %-4d %-13s %s%n", t.linha(), t.coluna(), t.tamanho(), t.tipo(), t.lexemaEmUmaLinha());
         }
         for (Diagnostico d : lexer.erros()) {
-            out.println(d.codigo() + " " + d.formatar());
+            out.println(d.codigo() + " " + d.formatar() + " [lexema: " + trecho(fonte, d) + "]");
         }
         return lexer.erros().isEmpty() ? OK : ERRO_PROGRAMA;
+    }
+
+    /** O trecho do fonte que o diagnóstico aponta (linha, coluna e tamanho contam code points). */
+    private static String trecho(String fonte, Diagnostico d) {
+        if (fonte.startsWith("\uFEFF")) {
+            fonte = fonte.substring(1);             // o léxico não conta o BOM como coluna
+        }
+        int[] linha = fonte.split("\n", -1)[d.linha() - 1].codePoints().toArray();
+        int inicio = Math.min(d.coluna() - 1, linha.length);
+        return new String(linha, inicio, Math.min(d.tamanho(), linha.length - inicio));
     }
 
     // ------------------------------------------------------------------ auxiliares

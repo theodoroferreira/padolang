@@ -1,0 +1,43 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     6    PROGRAMA      PADOIN
+1     8     1    ABRE_CHAVE    {
+2     3     6    DECLARA       padoin
+2     10    10   TIPO_STRING   padoSTRING
+2     21    1    ID            s
+2     23    1    ATRIB         =
+2     25    4    STRING        "ok"
+2     29    1    JOINHA        👍
+2     31    12   COMENTARIO    # comentario
+3     3     9    ESCRITA       padoPRINT
+3     12    1    ABRE_PAR      (
+3     13    9    ERRO          "aberto)👍
+4     3     6    DECLARA       padoin
+4     10    9    TIPO_INTER    padoINTER
+4     20    1    ERRO          ç
+4     22    1    ATRIB         =
+4     24    2    ERRO          2x
+4     27    1    MAIS          +
+4     29    2    ERRO          3.
+4     31    1    JOINHA        👍
+5     3     3    SE            pad
+5     7     1    ABRE_PAR      (
+5     8     1    ERRO          !
+5     9     1    ID            x
+5     10    1    FECHA_PAR     )
+5     12    1    ABRE_CHAVE    {
+5     14    9    ESCRITA       padoPRINT
+5     23    1    ABRE_PAR      (
+5     24    6    ERRO          "a\qb"
+5     30    1    FECHA_PAR     )
+5     31    2    JOINHA        👍
+5     34    1    FECHA_CHAVE   }
+6     1     1    FECHA_CHAVE   }
+7     1     5    COMENTARIO    # fim
+7     6     0    EOF           <fim>
+L3 padoERRO léxico (linha 3, coluna 13): string não fechada [lexema: "aberto)👍]
+L6 padoERRO léxico (linha 4, coluna 20): caractere inválido 'ç' (U+00E7) [lexema: ç]
+L2 padoERRO léxico (linha 4, coluna 24): lexema inválido '2x' (identificadores não podem começar com dígito) [lexema: 2x]
+L1 padoERRO léxico (linha 4, coluna 29): número real malformado '3.' (esperado dígito após o ponto) [lexema: 3.]
+L5 padoERRO léxico (linha 5, coluna 8): '!' isolado não é um operador válido (use !=) [lexema: !]
+L4 padoERRO léxico (linha 5, coluna 26): sequência de escape inválida na string [lexema: \q]

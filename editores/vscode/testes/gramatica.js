@@ -47,6 +47,10 @@ const casos = [
   ["  x = 1👍 # padoin \"nada\" 👍", "padoin", "comment.line.number-sign.padolang"],
   ["  x = 1👍 # padoin \"nada\" 👍", "#", "punctuation.definition.comment.padolang"],
   ["padoPRINTLN(\"# não é comentário\")👍", "#", "string.quoted.double.padolang"],
+  ["  x = #* padoin \"nada\" *# 1👍", "padoin", "comment.block.padolang"],
+  ["  x = #* padoin \"nada\" *# 1👍", "#*", "punctuation.definition.comment.begin.padolang"],
+  ["  x = #* padoin \"nada\" *# 1👍", "1", "constant.numeric.integer.padolang"],
+  ["padoPRINTLN(\"#* não é comentário *#\")👍", "#*", "string.quoted.double.padolang"],
 ];
 
 /** Primeira ocorrência do trecho; se ele é uma palavra, só como palavra inteira (o "a" de "padUNCTION" não conta). */

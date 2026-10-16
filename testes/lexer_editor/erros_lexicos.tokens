@@ -1,0 +1,137 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     46   COMENTARIO    # Caso de teste com erros léxicos propositais.
+2     1     94   COMENTARIO    # Cada bloco provoca um tipo de erro; os tokens válidos em volta continuam sendo reconhecidos.
+3     1     6    PROGRAMA      PADOIN
+3     8     1    ABRE_CHAVE    {
+4     3     57   COMENTARIO    # L6: símbolos que não pertencem ao alfabeto da linguagem
+5     3     6    DECLARA       padoin
+5     10    9    TIPO_INTER    padoINTER
+5     20    1    ID            a
+5     22    1    ATRIB         =
+5     24    1    NUM_INT       1
+5     26    1    ERRO          @
+5     28    1    NUM_INT       2
+5     29    1    JOINHA        👍
+6     3     6    DECLARA       padoin
+6     10    9    TIPO_INTER    padoINTER
+6     20    1    ID            b
+6     22    1    ATRIB         =
+6     24    1    ID            a
+6     26    1    ERRO          $
+6     28    1    NUM_INT       3
+6     29    1    ERRO          ;
+6     31    1    ID            b
+6     33    1    ATRIB         =
+6     35    1    ID            b
+6     37    1    ERRO          %
+6     39    1    NUM_INT       2
+6     40    1    JOINHA        👍
+7     3     6    DECLARA       padoin
+7     10    9    TIPO_INTER    padoINTER
+7     20    1    ID            a
+7     21    1    ERRO          ç
+7     22    1    ERRO          ã
+7     23    1    ID            o
+7     25    1    ATRIB         =
+7     27    1    NUM_INT       4
+7     28    1    JOINHA        👍
+9     3     74   COMENTARIO    # L6: operadores de outras linguagens (":=", "&&") não existem na padolang
+10    3     1    ID            a
+10    5     1    ERRO          :
+10    6     1    ATRIB         =
+10    8     1    NUM_INT       5
+10    9     1    JOINHA        👍
+11    3     3    SE            pad
+11    7     1    ABRE_PAR      (
+11    8     1    ID            a
+11    10    1    MAIOR         >
+11    12    1    NUM_INT       1
+11    14    1    ERRO          &
+11    15    1    ERRO          &
+11    17    1    ID            b
+11    19    1    MENOR         <
+11    21    1    NUM_INT       2
+11    22    1    FECHA_PAR     )
+11    24    1    ABRE_CHAVE    {
+11    26    1    FECHA_CHAVE   }
+13    3     39   COMENTARIO    # L2: identificador iniciado por dígito
+14    3     6    DECLARA       padoin
+14    10    9    TIPO_INTER    padoINTER
+14    20    2    ERRO          2x
+14    23    1    ATRIB         =
+14    25    1    NUM_INT       6
+14    26    1    JOINHA        👍
+15    3     6    DECLARA       padoin
+15    10    9    TIPO_FLOAT    padoFLOAT
+15    20    7    ERRO          9.5nota
+15    28    1    ATRIB         =
+15    30    6    ERRO          123abc
+15    36    1    JOINHA        👍
+17    3     38   COMENTARIO    # L1: constantes numéricas malformadas
+18    3     6    DECLARA       padoin
+18    10    9    TIPO_FLOAT    padoFLOAT
+18    20    1    ID            c
+18    22    1    ATRIB         =
+18    24    2    ERRO          3.
+18    26    1    JOINHA        👍
+19    3     6    DECLARA       padoin
+19    10    9    TIPO_FLOAT    padoFLOAT
+19    20    1    ID            d
+19    22    1    ATRIB         =
+19    24    5    ERRO          1.2.3
+19    29    1    JOINHA        👍
+20    3     6    DECLARA       padoin
+20    10    9    TIPO_FLOAT    padoFLOAT
+20    20    1    ID            e
+20    22    1    ATRIB         =
+20    24    1    ERRO          .
+20    25    1    NUM_INT       5
+20    26    1    JOINHA        👍
+22    3     36   COMENTARIO    # L5: "!" sozinho (só existe o "!=")
+23    3     3    SE            pad
+23    7     1    ABRE_PAR      (
+23    8     1    ERRO          !
+23    9     1    ID            a
+23    11    2    DIFERENTE     !=
+23    14    1    ID            b
+23    15    1    FECHA_PAR     )
+23    17    1    ABRE_CHAVE    {
+23    19    1    FECHA_CHAVE   }
+25    3     40   COMENTARIO    # L4: sequência de escape que não existe
+26    3     11   ESCRITA_LINHA padoPRINTLN
+26    14    1    ABRE_PAR      (
+26    15    10   ERRO          "um\qdois"
+26    25    1    FECHA_PAR     )
+26    26    1    JOINHA        👍
+28    3     36   COMENTARIO    # L3: texto sem a aspa de fechamento
+29    3     11   ESCRITA_LINHA padoPRINTLN
+29    14    1    ABRE_PAR      (
+29    15    9    ERRO          "aberto)👍
+30    3     11   ESCRITA_LINHA padoPRINTLN
+30    14    1    ABRE_PAR      (
+30    15    29   STRING        "depois do erro, tudo normal"
+30    44    1    FECHA_PAR     )
+30    45    1    JOINHA        👍
+31    1     1    FECHA_CHAVE   }
+33    1     99   ERRO          #* L7: comentário de bloco sem fechamento;\n   o erro aponta a linha e a coluna onde ele foi aberto\n
+35    1     0    EOF           <fim>
+L6 padoERRO léxico (linha 5, coluna 26): caractere inválido '@' (U+0040) [lexema: @]
+L6 padoERRO léxico (linha 6, coluna 26): caractere inválido '$' (U+0024) [lexema: $]
+L6 padoERRO léxico (linha 6, coluna 29): caractere inválido ';' (U+003B) [lexema: ;]
+L6 padoERRO léxico (linha 6, coluna 37): caractere inválido '%' (U+0025) [lexema: %]
+L6 padoERRO léxico (linha 7, coluna 21): caractere inválido 'ç' (U+00E7) [lexema: ç]
+L6 padoERRO léxico (linha 7, coluna 22): caractere inválido 'ã' (U+00E3) [lexema: ã]
+L6 padoERRO léxico (linha 10, coluna 5): caractere inválido ':' (U+003A) [lexema: :]
+L6 padoERRO léxico (linha 11, coluna 14): caractere inválido '&' (U+0026) [lexema: &]
+L6 padoERRO léxico (linha 11, coluna 15): caractere inválido '&' (U+0026) [lexema: &]
+L2 padoERRO léxico (linha 14, coluna 20): lexema inválido '2x' (identificadores não podem começar com dígito) [lexema: 2x]
+L2 padoERRO léxico (linha 15, coluna 20): lexema inválido '9.5nota' (identificadores não podem começar com dígito) [lexema: 9.5nota]
+L2 padoERRO léxico (linha 15, coluna 30): lexema inválido '123abc' (identificadores não podem começar com dígito) [lexema: 123abc]
+L1 padoERRO léxico (linha 18, coluna 24): número real malformado '3.' (esperado dígito após o ponto) [lexema: 3.]
+L1 padoERRO léxico (linha 19, coluna 24): número real malformado '1.2.3' (mais de um ponto decimal) [lexema: 1.2.3]
+L6 padoERRO léxico (linha 20, coluna 24): caractere inválido '.' (U+002E) [lexema: .]
+L5 padoERRO léxico (linha 23, coluna 8): '!' isolado não é um operador válido (use !=) [lexema: !]
+L4 padoERRO léxico (linha 26, coluna 18): sequência de escape inválida na string [lexema: \q]
+L3 padoERRO léxico (linha 29, coluna 15): string não fechada [lexema: "aberto)👍]
+L7 padoERRO léxico (linha 33, coluna 1): comentário de bloco não fechado (falta o '*#') [lexema: #*]
