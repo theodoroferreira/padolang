@@ -1,5 +1,8 @@
 package padolang.lexer;
 
+import padolang.diagnostico.Diagnostico;
+import padolang.diagnostico.Fase;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +13,17 @@ import java.util.Map;
  * O fonte é percorrido por code points Unicode (e não por char), porque o 👍
  * (U+1F44D) ocupa dois char em Java (par surrogate). Assim cada símbolo de Σ
  * corresponde a exatamente uma posição do vetor cp.
+ *
+ * Dois modos:
+ *   - COMPILADOR (padrão): comentários são descartados e o primeiro erro lança LexicoException;
+ *   - EDITOR (formatter, LSP e "padolang tokens --editor"): comentários viram tokens COMENTARIO e
+ *     cada erro vira um token ERRO, com o diagnóstico guardado em erros(); a análise continua depois
+ *     do trecho inválido.
+ * Nos dois modos os demais tokens são os mesmos.
  */
 public class Lexer {
+
+    public enum Modo { COMPILADOR, EDITOR }
 
     private static final int JOINHA = 0x1F44D;           // 👍
     private static final int TOM_PELE_INICIO = 0x1F3FB;  // 👍🏻 ... 👍🏿
@@ -47,13 +59,21 @@ public class Lexer {
     );
 
     private final int[] cp;
+    private final Modo modo;
     private int pos = 0;
     private int linha = 1;
     private int coluna = 1;
+    private int inicio;   // índice em cp do primeiro code point do lexema atual
     private final List<Token> tokens = new ArrayList<>();
+    private final List<Diagnostico> erros = new ArrayList<>();
 
     public Lexer(String fonte) {
+        this(fonte, Modo.COMPILADOR);
+    }
+
+    public Lexer(String fonte, Modo modo) {
         this.cp = fonte.codePoints().toArray();
+        this.modo = modo;
         // Um BOM no início do arquivo não faz parte do programa: é ignorado sem contar coluna
         if (cp.length > 0 && cp[0] == BOM) {
             pos = 1;
@@ -70,9 +90,10 @@ public class Lexer {
             }
 
             int l = linha, col = coluna; // posição de início do lexema
+            inicio = pos;
 
             if (c == '#') {
-                comentario();
+                comentario(l, col);
             } else if (ehLetra(c)) {
                 identificadorOuReservada(l, col);
             } else if (ehDigito(c)) {
@@ -85,17 +106,51 @@ public class Lexer {
                 operadorOuDelimitador(l, col);
             }
         }
-        tokens.add(new Token(TokenType.EOF, "<fim>", linha, coluna));
+        tokens.add(new Token(TokenType.EOF, "<fim>", linha, coluna, 0));
         return tokens;
     }
 
     // ---------------------------------------------------------------- padrões
 
-    /** #[^\n]*  — comentário até o fim da linha, descartado. */
-    private void comentario() {
+    /** Diagnósticos léxicos encontrados no modo EDITOR (no modo COMPILADOR fica sempre vazia). */
+    public List<Diagnostico> erros() {
+        return erros;
+    }
+
+    /**
+     * Comentários. Os dois padrões começam por '#', e o símbolo seguinte decide qual é (um símbolo
+     * de lookahead):
+     *   linha:  #([^*\n][^\n]*)?           — até o fim da linha;
+     *   bloco:  #\*([^*]|\*+[^*#])*\*+#     — de "#*" até o primeiro "*#", em uma ou mais linhas.
+     * São descartados, ou viram um token COMENTARIO no modo EDITOR.
+     */
+    private void comentario(int l, int col) {
+        avancar(); // '#'
+        if (!fim() && atual() == '*') {
+            comentarioDeBloco(l, col);
+            return;
+        }
         while (!fim() && atual() != '\n') {
             avancar();
         }
+        if (modo == Modo.EDITOR) {
+            emitir(TokenType.COMENTARIO, trecho(), l, col);
+        }
+    }
+
+    /** O resto do comentário de bloco, depois do '#'. Não aninha: fecha no primeiro "*#". */
+    private void comentarioDeBloco(int l, int col) {
+        avancar(); // '*'
+        while (!fim()) {
+            if (avancar() == '*' && casar('#')) {
+                if (modo == Modo.EDITOR) {
+                    emitir(TokenType.COMENTARIO, trecho(), l, col);
+                }
+                return;
+            }
+        }
+        // O erro aponta o "#*" que ficou aberto; no modo EDITOR o trecho até o fim do arquivo vira ERRO
+        falha("L7", "comentário de bloco não fechado (falta o '*#')", l, col, 2);
     }
 
     /** [a-zA-Z_][a-zA-Z0-9_]*  — depois consulta a tabela de reservadas. */
@@ -108,7 +163,7 @@ public class Lexer {
         emitir(RESERVADAS.getOrDefault(lexema, TokenType.ID), lexema, l, col);
     }
 
-    /** [0-9]+ (NUM_INT)  ou  [0-9]+\.[0-9]+ (NUM_FLOAT). */
+    /** [0-9]+ (NUM_INT)  ou  [0-9]+\.[0-9]+ (NUM_FLOAT): no máximo um ponto, com dígitos dos dois lados. */
     private void numero(int l, int col) {
         StringBuilder sb = new StringBuilder();
         lerDigitos(sb);
@@ -117,15 +172,35 @@ public class Lexer {
         if (!fim() && atual() == '.') {
             sb.appendCodePoint(avancar());
             if (fim() || !ehDigito(atual())) {
-                throw new LexicoException("número real malformado '" + sb + "' (esperado dígito após o ponto)", l, col);
+                falha("L1", "número real malformado '" + sb + "' (esperado dígito após o ponto)", l, col, pos - inicio);
+                return;
             }
             lerDigitos(sb);
             tipo = TokenType.NUM_FLOAT;
+
+            if (!fim() && atual() == '.') {
+                // 1.2.3: o lexema inteiro é um erro só, em vez de um real seguido de um '.' solto
+                while (!fim() && (ehDigito(atual()) || atual() == '.')) {
+                    avancar();
+                }
+                falha("L1", "número real malformado '" + trecho() + "' (mais de um ponto decimal)", l, col, pos - inicio);
+                return;
+            }
         }
 
         if (!fim() && ehLetra(atual())) {
-            throw new LexicoException("lexema inválido '" + sb + Character.toString(atual())
-                    + "...' (identificadores não podem começar com dígito)", l, col);
+            // O trecho apontado vai até o fim do "identificador" (ex.: 2x inteiro)
+            int fimTrecho = pos;
+            while (fimTrecho < cp.length && (ehLetra(cp[fimTrecho]) || ehDigito(cp[fimTrecho]))) {
+                fimTrecho++;
+            }
+            falhaSemToken("L2", "lexema inválido '" + new String(cp, inicio, fimTrecho - inicio)
+                    + "' (identificadores não podem começar com dígito)", l, col, fimTrecho - inicio);
+            while (pos < fimTrecho) {
+                avancar();
+            }
+            emitir(TokenType.ERRO, trecho(), l, col);
+            return;
         }
         emitir(tipo, sb.toString(), l, col);
     }
@@ -134,10 +209,13 @@ public class Lexer {
     private void string(int l, int col) {
         StringBuilder sb = new StringBuilder();
         sb.appendCodePoint(avancar()); // aspa de abertura
+        boolean escapeInvalido = false;   // só chega a true no modo EDITOR
 
         while (true) {
             if (fim() || atual() == '\n') {
-                throw new LexicoException("string não fechada", l, col);
+                // No modo EDITOR o trecho até o fim da linha vira ERRO e a análise segue na próxima linha
+                falha("L3", "string não fechada", l, col, semCr(pos) - inicio);
+                return;
             }
             int c = avancar();
             if (c == '"') {
@@ -146,14 +224,26 @@ public class Lexer {
             }
             if (c == '\\') {
                 if (fim() || "nt\"\\".indexOf(atual()) < 0) {
-                    throw new LexicoException("sequência de escape inválida na string", linha, coluna - 1);
+                    boolean temProximo = !fim() && atual() != '\n';
+                    falhaSemToken("L4", "sequência de escape inválida na string", linha, coluna - 1,
+                            temProximo ? 2 : 1);
+                    // Modo EDITOR: pula o escape e continua; a string inteira vira ERRO no fim
+                    escapeInvalido = true;
+                    if (temProximo) {
+                        avancar();
+                    }
+                    continue;
                 }
                 sb.append('\\').appendCodePoint(avancar());
             } else {
                 sb.appendCodePoint(c);
             }
         }
-        emitir(TokenType.STRING, sb.toString(), l, col);
+        if (escapeInvalido) {
+            emitir(TokenType.ERRO, trecho(), l, col);
+        } else {
+            emitir(TokenType.STRING, sb.toString(), l, col);
+        }
     }
 
     /** 👍 com modificador de tom de pele e seletor de variação opcionais. */
@@ -180,19 +270,40 @@ public class Lexer {
             case '<' -> emitir(casar('=') ? TokenType.MENOR_IGUAL : TokenType.MENOR, l, col);
             case '>' -> emitir(casar('=') ? TokenType.MAIOR_IGUAL : TokenType.MAIOR, l, col);
             case '!' -> {
-                if (!casar('=')) {
-                    throw new LexicoException("'!' isolado não é um operador válido (use !=)", l, col);
+                if (casar('=')) {
+                    emitir(TokenType.DIFERENTE, l, col);
+                } else {
+                    falha("L5", "'!' isolado não é um operador válido (use !=)", l, col, 1);
                 }
-                emitir(TokenType.DIFERENTE, l, col);
             }
             case '(' -> emitir(TokenType.ABRE_PAR, l, col);
             case ')' -> emitir(TokenType.FECHA_PAR, l, col);
             case '{' -> emitir(TokenType.ABRE_CHAVE, l, col);
             case '}' -> emitir(TokenType.FECHA_CHAVE, l, col);
             case ',' -> emitir(TokenType.VIRGULA, l, col);
-            default -> throw new LexicoException(
-                    "caractere inválido '" + Character.toString(c) + "' (U+" + String.format("%04X", c) + ")", l, col);
+            default -> falha("L6",
+                    "caractere inválido '" + Character.toString(c) + "' (U+" + String.format("%04X", c) + ")", l, col, 1);
         }
+    }
+
+    // ---------------------------------------------------------------- erros
+
+    /**
+     * Erro léxico. No modo COMPILADOR lança a exceção; no modo EDITOR registra o diagnóstico e emite
+     * um token ERRO com o trecho já consumido desde o início do lexema.
+     */
+    private void falha(String codigo, String mensagem, int l, int col, int tamanho) {
+        falhaSemToken(codigo, mensagem, l, col, tamanho);
+        emitir(TokenType.ERRO, trecho(), l, col);
+    }
+
+    /** Como falha(), mas sem emitir o token (usado quando o lexema ainda não terminou). */
+    private void falhaSemToken(String codigo, String mensagem, int l, int col, int tamanho) {
+        Diagnostico d = Diagnostico.erro(Fase.LEXICO, codigo, l, col, tamanho, mensagem);
+        if (modo == Modo.COMPILADOR) {
+            throw new LexicoException(d);
+        }
+        erros.add(d);
     }
 
     // ---------------------------------------------------------------- auxiliares
@@ -237,7 +348,22 @@ public class Lexer {
     }
 
     private void emitir(TokenType tipo, String lexema, int l, int col) {
-        tokens.add(new Token(tipo, lexema, l, col));
+        tokens.add(new Token(tipo, lexema, l, col, tamanho(lexema, tipo)));
+    }
+
+    /** O tamanho é o do trecho consumido; em COMENTARIO e ERRO o '\r' final (CRLF) fica de fora. */
+    private int tamanho(String lexema, TokenType tipo) {
+        return (tipo == TokenType.COMENTARIO || tipo == TokenType.ERRO) ? semCr(pos) - inicio : pos - inicio;
+    }
+
+    /** O texto do fonte desde o início do lexema atual, sem o '\r' de um fim de linha CRLF. */
+    private String trecho() {
+        return new String(cp, inicio, semCr(pos) - inicio);
+    }
+
+    /** Recua um índice de fim de trecho para antes de um '\r' final. */
+    private int semCr(int fimTrecho) {
+        return (fimTrecho > inicio && cp[fimTrecho - 1] == '\r') ? fimTrecho - 1 : fimTrecho;
     }
 
     /** Para operadores/delimitadores o lexema é recuperado do próprio fonte. */

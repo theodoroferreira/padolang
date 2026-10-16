@@ -1,0 +1,26 @@
+#* cabeçalho
+   de várias linhas
+*#
+#**# #* dois na mesma linha *#
+padUNCTION padoINTER dobro(#* p *# padoINTER n) { #* depois da chave *#
+  padOUT n * #* meio *# 2👍
+}
+
+PADOIN { #* multi
+  linha *#
+  padoin padoINTER x = 1👍 #* fim *#
+  padoin padoINTER y = -#*u*# x👍
+
+  #* bloco
+     solto *#
+  padoPRINTLN(dobro(x) #* antes do joinha *# )👍 # linha
+  #* a *#
+  x = 2👍
+  pad (x > 1) {
+    padoPRINTLN(y)👍
+  } #* entre *#
+  oin {
+    padoPRINTLN(#***# "a # b #* c *#")👍
+  }
+}
+#* fim *#

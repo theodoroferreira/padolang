@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Lançador da CLI da padolang: "padolang check|build|tokens|ast|--help|--version".
+# Pode ser chamado por um link simbólico (ex.: em ~/.local/bin) ou com bin/ no PATH.
+# Se o jar ainda não existe, ou algum .java mudou depois dele, recompila antes.
+set -e
+
+# Resolve links simbólicos para achar a raiz do repositório
+ARQ="$0"
+while [ -L "$ARQ" ]; do
+  ALVO="$(readlink "$ARQ")"
+  case "$ALVO" in
+    /*) ARQ="$ALVO" ;;
+    *)  ARQ="$(dirname "$ARQ")/$ALVO" ;;
+  esac
+done
+RAIZ="$(cd "$(dirname "$ARQ")/.." && pwd)"
+JAR="$RAIZ/out/padolang.jar"
+
+if [ -d "$RAIZ/src" ] && { [ ! -f "$JAR" ] || [ -n "$(find "$RAIZ/src" -name '*.java' -newer "$JAR" | head -n 1)" ]; }; then
+  # nada no stdout: ele pode estar sendo usado por uma ferramenta (--json, LSP)
+  "$RAIZ/compilar.sh" > /dev/null
+fi
+
+exec java -jar "$JAR" "$@"

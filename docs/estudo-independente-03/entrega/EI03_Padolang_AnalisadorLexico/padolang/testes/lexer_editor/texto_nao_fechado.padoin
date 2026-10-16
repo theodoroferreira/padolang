@@ -1,0 +1,6 @@
+PADOIN {
+  padoin padoSTRING s = "ok"👍
+  padoPRINT("aberto)👍
+  padoPRINTLN(s)👍
+  s = "fim"👍
+}

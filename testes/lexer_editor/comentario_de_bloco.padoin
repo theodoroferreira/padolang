@@ -1,0 +1,10 @@
+#**# #***# #* # não é de linha *# 1👍
+#* várias
+   linhas, com * e # soltos
+*# PADOIN { #* "aspas" { *#
+  padoPRINTLN("#* texto, não comentário *#")👍 # de linha com #* dentro
+  # *# sozinho não fecha nada
+}
+#*
+  fim de linha CRLF dentro do bloco
+*#

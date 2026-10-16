@@ -1,0 +1,25 @@
+== TOKENS (editor) ==
+LIN   COL   TAM  TIPO          LEXEMA
+1     1     6    PROGRAMA      PADOIN
+1     8     1    ABRE_CHAVE    {
+2     3     6    DECLARA       padoin
+2     10    10   TIPO_STRING   padoSTRING
+2     21    1    ID            s
+2     23    1    ATRIB         =
+2     25    4    STRING        "ok"
+2     29    1    JOINHA        👍
+3     3     9    ESCRITA       padoPRINT
+3     12    1    ABRE_PAR      (
+3     13    9    ERRO          "aberto)👍
+4     3     11   ESCRITA_LINHA padoPRINTLN
+4     14    1    ABRE_PAR      (
+4     15    1    ID            s
+4     16    1    FECHA_PAR     )
+4     17    1    JOINHA        👍
+5     3     1    ID            s
+5     5     1    ATRIB         =
+5     7     5    STRING        "fim"
+5     12    1    JOINHA        👍
+6     1     1    FECHA_CHAVE   }
+7     1     0    EOF           <fim>
+L3 padoERRO léxico (linha 3, coluna 13): string não fechada [lexema: "aberto)👍]

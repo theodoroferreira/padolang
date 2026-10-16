@@ -1,6 +1,6 @@
 # o léxico já reconhece todos os tokens de função
 padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
-    padOUT a + b👍
+  padOUT a + b👍
 }
 
 PADOIN {

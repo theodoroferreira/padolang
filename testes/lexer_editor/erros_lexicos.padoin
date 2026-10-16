@@ -1,0 +1,34 @@
+# Caso de teste com erros léxicos propositais.
+# Cada bloco provoca um tipo de erro; os tokens válidos em volta continuam sendo reconhecidos.
+PADOIN {
+  # L6: símbolos que não pertencem ao alfabeto da linguagem
+  padoin padoINTER a = 1 @ 2👍
+  padoin padoINTER b = a $ 3; b = b % 2👍
+  padoin padoINTER ação = 4👍
+
+  # L6: operadores de outras linguagens (":=", "&&") não existem na padolang
+  a := 5👍
+  pad (a > 1 && b < 2) { }
+
+  # L2: identificador iniciado por dígito
+  padoin padoINTER 2x = 6👍
+  padoin padoFLOAT 9.5nota = 123abc👍
+
+  # L1: constantes numéricas malformadas
+  padoin padoFLOAT c = 3.👍
+  padoin padoFLOAT d = 1.2.3👍
+  padoin padoFLOAT e = .5👍
+
+  # L5: "!" sozinho (só existe o "!=")
+  pad (!a != b) { }
+
+  # L4: sequência de escape que não existe
+  padoPRINTLN("um\qdois")👍
+
+  # L3: texto sem a aspa de fechamento
+  padoPRINTLN("aberto)👍
+  padoPRINTLN("depois do erro, tudo normal")👍
+}
+
+#* L7: comentário de bloco sem fechamento;
+   o erro aponta a linha e a coluna onde ele foi aberto

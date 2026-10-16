@@ -1,0 +1,13 @@
+# cabeçalho do arquivo
+   # outro comentário, com espaços antes    
+PADOIN { # abre o programa
+padoin padoINTER x = 1👍   # comentário no fim da linha
+      # comentário em linha própria, mal indentado
+pad (x > 0) {
+# dentro do pad
+padoPRINTLN(x)👍
+} # fecha o pad
+x = x + # comentário no meio da expressão
+2👍
+}
+# comentário no fim do arquivo

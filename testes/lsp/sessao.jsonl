@@ -1,0 +1,24 @@
+# Sessão LSP gravada: uma mensagem JSON-RPC por linha (o testar-lsp.sh acrescenta o Content-Length).
+# Linhas vazias e começadas por '#' são ignoradas.
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"processId":null,"rootUri":null,"capabilities":{}}}
+{"jsonrpc":"2.0","method":"initialized","params":{}}
+# A: R14 com um 👍 antes na mesma linha: coluna 33 da padolang = caractere 33 do LSP
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///a.padoin","languageId":"padolang","version":1,"text":"PADOIN {\n  padoin padoINTER x = 10👍\n  padoin padoINTER y = 1👍 x = x / 0👍\n}\n"}}}
+# B: o caso do plano, com o 👍 escrito como par surrogate 👍: o z (coluna 48) = caractere 48
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///b.padoin","languageId":"padolang","version":1,"text":"PADOIN {\n  padoin padoINTER x = 1\ud83d\udc4d padoin padoINTER y = z\ud83d\udc4d\n}\n"}}}
+# C: cores e formatação (parâmetro, função, 👍🏽 com 4 unidades UTF-16, comentário no fim)
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///c.padoin","languageId":"padolang","version":1,"text":"padUNCTION padoINTER f(padoINTER n) {\n  padOUT n + 1👍🏽\n}\nPADOIN { padoPRINTLN(f(2))👍 } # fim\n"}}}
+{"jsonrpc":"2.0","id":2,"method":"textDocument/semanticTokens/full","params":{"textDocument":{"uri":"file:///c.padoin"}}}
+{"jsonrpc":"2.0","id":3,"method":"textDocument/formatting","params":{"textDocument":{"uri":"file:///c.padoin"},"options":{"tabSize":2,"insertSpaces":true}}}
+# D: erro léxico (texto sem aspa de fechamento) e erro sintático
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///d.padoin","languageId":"padolang","version":1,"text":"PADOIN {\n  padoPRINTLN(\"oi)👍\n}\n"}}}
+{"jsonrpc":"2.0","method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///e.padoin","languageId":"padolang","version":1,"text":"PADOIN {\n  padoin padoINTER x = 👍\n}\n"}}}
+# A corrigido: os diagnósticos somem
+{"jsonrpc":"2.0","method":"textDocument/didChange","params":{"textDocument":{"uri":"file:///a.padoin","version":2},"contentChanges":[{"text":"PADOIN {\n  padoin padoINTER x = 10👍\n  x = x / 2👍\n}\n"}]}}
+# robustez: método desconhecido, JSON inválido, documento não aberto; o servidor continua vivo
+{"jsonrpc":"2.0","id":4,"method":"textDocument/hover","params":{}}
+{"jsonrpc":"2.0","id":5,"method":
+{"jsonrpc":"2.0","id":6,"method":"textDocument/formatting","params":{"textDocument":{"uri":"file:///nao_aberto.padoin"}}}
+{"jsonrpc":"2.0","method":"textDocument/didClose","params":{"textDocument":{"uri":"file:///b.padoin"}}}
+{"jsonrpc":"2.0","id":7,"method":"shutdown"}
+{"jsonrpc":"2.0","method":"exit"}

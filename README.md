@@ -30,7 +30,21 @@ arquivo.padoin → LÉXICO → TOKENS → PARSER → AST → SEMÂNTICA → CÓD
 | Análise semântica | `src/padolang/semantica/` | tabela de funções, tabela de símbolos com pilha de escopos e regras de tipo; anota o tipo de cada expressão |
 | Geração de código | `src/padolang/gerador/` | percorre a AST e emite C, com as funções auxiliares de execução que o programa usar |
 
-## Pré-requisitos
+## Instalação
+
+Para só usar a linguagem, baixe a versão pronta na página de [Releases](https://github.com/theodoroferreira/padolang/releases). Precisa do **Java 21** ou superior e do **gcc** (no Ubuntu: `sudo apt install openjdk-21-jre gcc`).
+
+```bash
+unzip padolang-0.1.0.zip
+cd padolang-0.1.0
+bin/padolang run exemplos/ola_mundo.padoin
+```
+
+Para usar só `padolang` de qualquer pasta, coloque o `bin/` no `PATH` (ver [CLI](#cli-binpadolang)). No Windows, use o `bin\padolang.cmd`; o `run` precisa de um `gcc` no `PATH` (por exemplo, o do MSYS2).
+
+Na mesma página está o `padolang-0.1.0.vsix`, a extensão para VS Code ou Cursor: `code --install-extension padolang-0.1.0.vsix`, ou "Extensions: Install from VSIX...".
+
+## Pré-requisitos (para compilar a partir do código)
 
 - **JDK 21** ou superior
 - **gcc**
@@ -52,7 +66,7 @@ cd padolang
 ./padolang.sh exemplos/tabuada.padoin          # transpila, compila e executa
 ```
 
-O `padolang.sh` recompila o transpilador se algum `.java` mudou, gera `saida/<nome>.c`, compila com `gcc -std=c11 -fwrapv` e executa o programa. Opções:
+O `padolang.sh` é um atalho para `bin/padolang run --dir saida` (ver abaixo): recompila o transpilador se algum `.java` mudou, gera `saida/<nome>.c`, compila com `gcc -std=c11 -fwrapv` e executa o programa. Opções:
 
 ```bash
 ./padolang.sh arquivo.padoin --tokens   # mostra a tabela de tokens
@@ -64,6 +78,47 @@ Para só gerar o C, sem compilar nem executar:
 ```bash
 java -cp out padolang.Main arquivo.padoin -o saida.c
 ```
+
+### CLI (`bin/padolang`)
+
+O `compilar.sh` também empacota o transpilador em `out/padolang.jar`. O `bin/padolang` (ou `bin/padolang.cmd`, no Windows) chama esse jar e o recompila sozinho se algum `.java` mudou:
+
+```bash
+bin/padolang check  arquivo.padoin [--json]      # confere o programa, sem gerar C
+bin/padolang build  arquivo.padoin [-o saida.c]  # gera o C
+bin/padolang run    arquivo.padoin [--manter]    # gera o C, compila e executa
+bin/padolang fmt    arquivo.padoin... [--check | --stdout]  # formata os arquivos
+bin/padolang lsp                                 # servidor LSP (stdin/stdout), usado pelos editores
+bin/padolang tokens arquivo.padoin [--editor]    # lista os tokens (--editor: comentários e todos os erros léxicos)
+bin/padolang ast    arquivo.padoin               # mostra a árvore sintática
+bin/padolang --help | --version
+```
+
+O `check --json` imprime os erros com fase, código (`L1`..`L7`, `S1`, `R1`..`R21`), linha, coluna e tamanho, por exemplo `[{"fase":"SEMANTICO","severidade":"ERRO","codigo":"R14","linha":5,"coluna":9,"tamanho":1,"mensagem":"divisão por zero"}]`. Códigos de saída: 0 ok, 1 erro no programa, 2 erro de uso ou de arquivo.
+
+O `run` usa o compilador C da variável `PADOLANG_CC`, se existir; senão o `gcc`; senão o `cc`. O `.c` e o executável ficam numa pasta temporária, apagada no fim; com `--manter` eles ficam em `saida/`, e com `--dir <pasta>`, na pasta indicada. O programa lê do teclado (ou da entrada redirecionada) e o código de saída é o dele: 1 num `padoERRO de execução`.
+
+O `fmt` formata no próprio arquivo: 2 espaços por bloco, um comando por linha, `{` na mesma linha, `} oin {`, espaços em volta dos operadores binários, comentários preservados e no máximo uma linha em branco seguida. Com `--stdout` só imprime o resultado; com `--check` só confere e sai com 1 se algum arquivo mudaria. Um arquivo com erro léxico ou sintático não é alterado, e o formatador confere que o resultado tem exatamente os mesmos tokens do original.
+
+O `lsp` é um servidor [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) sem dependências (JSON e JSON-RPC escritos à mão): mostra os erros no editor enquanto se digita (com o código `L`, `S` ou `R` e o trecho sublinhado), dá as cores por Semantic Tokens (parâmetros diferentes de variáveis, por exemplo) e formata o documento com o mesmo formatador do `fmt`. As colunas da padolang contam code points e as do LSP contam unidades UTF-16; a conversão fica em `lsp/Posicoes.java` (um 👍 é 1 coluna na padolang e 2 no editor).
+
+Para usar só `padolang`, coloque a pasta `bin/` no `PATH` (é por ele que os editores vão achar a padolang):
+
+```bash
+export PATH="$PWD/bin:$PATH"     # no ~/.bashrc ou ~/.zshrc, com o caminho completo
+```
+
+### Extensão VS Code / Cursor (`editores/vscode/`)
+
+Cores (gramática TextMate e Semantic Tokens), erros sublinhados enquanto se digita, formatação (`Shift+Alt+F`) e o comando "Padolang: Executar arquivo", que roda o programa num terminal integrado com entrada pelo teclado. Precisa do Java 21. O `.vsix` pronto está nas [Releases](https://github.com/theodoroferreira/padolang/releases); para gerar a partir do código:
+
+```bash
+./compilar.sh
+cd editores/vscode && npm install && npm run empacotar   # gera padolang-0.1.0.vsix, com o jar dentro
+code --install-extension padolang-0.1.0.vsix             # ou "Extensions: Install from VSIX..." no VS Code ou no Cursor
+```
+
+Detalhes e configurações em [`editores/vscode/README.md`](editores/vscode/README.md).
 
 ## A linguagem
 
@@ -85,7 +140,7 @@ Os arquivos têm a extensão `.padoin`. Todo programa começa com `PADOIN { ... 
 | Função | `padUNCTION padoINTER soma(padoINTER a, padoINTER b) { }` | `int pad_soma(int pad_a, int pad_b) { }` |
 | Retorno | `padOUT a + b👍` | `return pad_a + pad_b;` |
 | Chamada como comando | `mostra(3)👍` | `pad_mostra(3);` |
-| Comentário | `# até o fim da linha` | — |
+| Comentário | `# até o fim da linha` ou `#* várias linhas *#` | — |
 
 ### Tipos
 
@@ -136,6 +191,7 @@ Isso vale para divisão ou `padoMOD` inteiro por zero, entrada inválida ou fim 
 - Uma variável declarada sem valor começa com o valor nulo do tipo: `0`, `0.0`, `padoFALSE` ou `""`.
 - No C gerado, todo identificador recebe o prefixo `pad_`. Assim nomes como `int` ou `main` continuam válidos na padolang.
 - No `papapadoin`, a inicialização e o passo são opcionais.
+- O comentário de bloco vai de `#*` até o primeiro `*#` e não aninha; sem o `*#`, é erro léxico (`L7`).
 - `5--3` é erro sintático: pelo maior casamento, `--` é o decremento (como no Java e no C). Escreva `5 - -3`.
 - A memória dos textos criados por concatenação e leitura não é liberada; os programas padolang são curtos.
 
@@ -184,7 +240,16 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `exemplo_funcao` | função com dois parâmetros e condicional |
 | `exemplo_textos_e_recursao` | textos, lógicos, recursão e expressões com menos unário |
 
-A cada *push* ou *pull request* na `main`, o GitHub Actions compila o projeto e roda o `testar.sh`. O C gerado fica disponível como artefato da execução.
+A cada *push* ou *pull request* na `main` ou na `ferramentas`, o GitHub Actions compila o projeto e roda o `testar.sh`, o `testar-lexer-editor.sh`, o `testar-cli.sh`, o `testar-formatador.sh` e o `testar-lsp.sh`; depois confere a gramática da extensão VS Code e empacota o `.vsix`. O C gerado e o `.vsix` ficam disponíveis como artefatos da execução.
+
+Para publicar uma versão, atualize `VERSAO` em `src/padolang/cli/Cli.java` e `version` em `editores/vscode/package.json` e envie uma tag com o mesmo número:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+O workflow `release.yml` confere se a tag bate com as duas versões, roda os mesmos testes e cria a Release com o `padolang-<versão>.zip` (lançadores `bin/`, `out/padolang.jar` já compilado, exemplos) e o `padolang-<versão>.vsix`.
 
 ## Estrutura do repositório
 
@@ -196,13 +261,24 @@ padolang/
 │   ├── ast/
 │   ├── semantica/
 │   ├── gerador/
+│   ├── diagnostico/     erros estruturados (fase, código, posição, tamanho)
+│   ├── cli/             subcomandos da linha de comando
+│   ├── runner/          chama o compilador C e executa o programa
+│   ├── formatador/      padolang fmt (a partir dos tokens do modo editor)
+│   ├── lsp/             padolang lsp: JSON, JSON-RPC, diagnósticos, Semantic Tokens, posições UTF-16
 │   └── Main.java
-├── testes/              suíte obrigatória (válidos e inválidos)
+├── testes/              suíte obrigatória (válidos e inválidos); formatador/, lexer_editor/ e lsp/
 ├── exemplos/            programas de demonstração
 ├── docs/                decisões de projeto e regras semânticas
-├── compilar.sh          compila o transpilador
-├── padolang.sh          transpila, compila e executa um programa
-└── testar.sh            roda todos os testes e exemplos
+├── bin/                 lançadores da CLI (padolang, padolang.cmd)
+├── editores/vscode/     extensão VS Code / Cursor (gramática TextMate + cliente LSP)
+├── compilar.sh          compila o transpilador e gera out/padolang.jar
+├── padolang.sh          transpila, compila e executa um programa (atalho para bin/padolang run)
+├── testar.sh            roda todos os testes e exemplos
+├── testar-lexer-editor.sh  confere o léxico no modo editor
+├── testar-formatador.sh confere o formatador (testes/formatador/, idempotência, comportamento)
+├── testar-lsp.sh        confere o servidor LSP com a sessão gravada em testes/lsp/
+└── testar-cli.sh        confere a CLI (subcomandos, --json, run e códigos de saída)
 ```
 
 ## Integrantes

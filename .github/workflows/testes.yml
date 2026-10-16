@@ -2,9 +2,10 @@ name: Testes
 
 on:
   push:
-    branches: [main]
+    branches: [main, ferramentas]
   pull_request:
-    branches: [main]
+    branches: [main, ferramentas]
+  workflow_call:
 
 jobs:
   testes:
@@ -30,6 +31,47 @@ jobs:
 
       - name: Rodar testes e exemplos
         run: ./testar.sh
+
+      - name: Testar o léxico no modo editor
+        run: ./testar-lexer-editor.sh
+
+      - name: Guardar o jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: padolang-jar
+          path: out/padolang.jar
+
+      - name: Testar a CLI
+        run: |
+          bin/padolang --version
+          bin/padolang check --json testes/05_erro_semantico_divisao_por_zero.padoin | grep -q '"codigo":"R14"'
+          ./testar-cli.sh
+
+      - name: Testar o formatador
+        run: ./testar-formatador.sh
+
+      - name: Testar o servidor LSP
+        run: ./testar-lsp.sh
+
+      - name: Instalar o Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: editores/vscode/package-lock.json
+
+      - name: Extensão VS Code (gramática e .vsix)
+        working-directory: editores/vscode
+        run: |
+          npm ci
+          npm test
+          npm run empacotar
+
+      - name: Guardar a extensão VS Code
+        uses: actions/upload-artifact@v4
+        with:
+          name: padolang-vsix
+          path: editores/vscode/*.vsix
 
       - name: Guardar o código C gerado
         if: always()

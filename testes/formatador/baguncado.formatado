@@ -1,0 +1,15 @@
+padUNCTION padoINTER soma(padoINTER a, padoINTER b) {
+  padOUT a + b👍
+}
+PADOIN {
+  padoin padoINTER n = soma(1, 2)👍
+  padoin padoOLEAN ok = padNOT (n > 2) padAND n <= 10👍
+  padoinquanto (n > 0) {
+    n--👍
+    padoPRINT(n)👍
+  }
+  papapadoin (n = 0, n < 3, n++) {
+    padoPRINTLN(padoINTER(2.5) * n padoMOD 2)👍
+  }
+  padoPRINTLN()👍
+}

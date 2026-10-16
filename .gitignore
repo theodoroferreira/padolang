@@ -5,21 +5,17 @@ out/
 # Código C e executáveis gerados pelo padolang.sh
 saida/
 
-# Extensões de editor (código na branch ferramentas): dependências e arquivos de build
-node_modules/
-*.jar
-*.vsix
+# Extensão VS Code: dependências, JS compilado, jar e licença copiados no empacotamento
+editores/vscode/node_modules/
+editores/vscode/out/
 editores/vscode/server/
 editores/vscode/LICENSE
-editores/tree-sitter-padolang/*.wasm
-editores/zed/target/
-editores/zed/grammars/
-editores/zed/extension.wasm
+*.vsix
 
 # IDEs e editores
 .idea/
 *.iml
-.vscode/
+/.vscode/
 *.swp
 
 # Sistema operacional

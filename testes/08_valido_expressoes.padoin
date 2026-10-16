@@ -30,13 +30,17 @@ PADOIN {
   }
 
   # padoMOD tem o sinal do dividendo, como em Java
-  padoPRINT(7 padoMOD 3)👍 padoPRINT(" ")👍
-  padoPRINT(-7 padoMOD 3)👍 padoPRINT(" ")👍
+  padoPRINT(7 padoMOD 3)👍
+  padoPRINT(" ")👍
+  padoPRINT(-7 padoMOD 3)👍
+  padoPRINT(" ")👍
   padoPRINTLN(7 padoMOD -3)👍
 
   # padoINTER(x) trunca em direção a zero
-  padoPRINT(padoINTER(7.8))👍 padoPRINT(" ")👍
-  padoPRINT(padoINTER(-7.8))👍 padoPRINT(" ")👍
+  padoPRINT(padoINTER(7.8))👍
+  padoPRINT(" ")👍
+  padoPRINT(padoINTER(-7.8))👍
+  padoPRINT(" ")👍
   padoPRINTLN(padoINTER(7))👍
 
   # estouro dá a volta, como o int do Java
@@ -57,11 +61,14 @@ PADOIN {
   padoPRINTLN(-2.5)👍
   padoPRINTLN(-0.0)👍
   padoin padoFLOAT zero = 0.0👍
-  padoPRINT(1.0 / zero)👍 padoPRINT(" ")👍
-  padoPRINT(-1.0 / zero)👍 padoPRINT(" ")👍
+  padoPRINT(1.0 / zero)👍
+  padoPRINT(" ")👍
+  padoPRINT(-1.0 / zero)👍
+  padoPRINT(" ")👍
   padoPRINTLN(zero / zero)👍
 
   # divisão inteira x real
-  padoPRINT(7 / 2)👍 padoPRINT(" ")👍
+  padoPRINT(7 / 2)👍
+  padoPRINT(" ")👍
   padoPRINTLN(7 / 2.0)👍
 }

@@ -1,0 +1,7 @@
+PADOIN {
+  padoin padoSTRING s = "ok"👍 # comentario
+  padoPRINT("aberto)👍
+  padoin padoINTER ç = 2x + 3.👍
+  pad (!x) { padoPRINT("a\qb")👍🏽 }
+}
+# fim
