@@ -13,8 +13,6 @@ jobs:
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # o testar-zed.sh confere o rev da gramática no extension.toml
 
       - name: Instalar o JDK 21
         uses: actions/setup-java@v4
@@ -53,9 +51,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: |
-            editores/vscode/package-lock.json
-            editores/tree-sitter-padolang/package-lock.json
+          cache-dependency-path: editores/vscode/package-lock.json
 
       - name: Extensão VS Code (gramática e .vsix)
         working-directory: editores/vscode
@@ -63,14 +59,6 @@ jobs:
           npm ci
           npm test
           npm run empacotar
-
-      - name: Instalar o alvo wasm32-wasip2 do Rust (extensão do Zed)
-        run: rustup target add wasm32-wasip2
-
-      - name: Gramática Tree-sitter e extensão do Zed
-        run: |
-          (cd editores/tree-sitter-padolang && npm ci)
-          EXIGIR_TUDO=1 ./testar-zed.sh
 
       - name: Guardar a extensão VS Code
         uses: actions/upload-artifact@v4

@@ -12,14 +12,6 @@ editores/vscode/server/
 editores/vscode/LICENSE
 *.vsix
 
-# Gramática Tree-sitter e extensão do Zed: dependências e arquivos gerados na compilação
-# (o src/ da gramática é gerado, mas fica no git: é de lá que o Zed compila o parser)
-editores/tree-sitter-padolang/node_modules/
-editores/tree-sitter-padolang/*.wasm
-editores/zed/target/
-editores/zed/grammars/
-editores/zed/extension.wasm
-
 # IDEs e editores
 .idea/
 *.iml
