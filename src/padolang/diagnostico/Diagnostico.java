@@ -15,9 +15,9 @@ public record Diagnostico(Fase fase, Severidade severidade, String codigo,
         return new Diagnostico(fase, Severidade.ERRO, codigo, linha, coluna, tamanho, mensagem);
     }
 
-    /** Ex.: "padoERRO semântico (linha 3, coluna 17): divisão por zero" */
+    /** Ex.: "padoERRO semântico R14 (linha 3, coluna 17): divisão por zero" (o código diz a regra violada) */
     public String formatar() {
-        return String.format("%s %s (linha %d, coluna %d): %s",
-                severidade.prefixo, fase.nome, linha, coluna, mensagem);
+        return String.format("%s %s %s (linha %d, coluna %d): %s",
+                severidade.prefixo, fase.nome, codigo, linha, coluna, mensagem);
     }
 }

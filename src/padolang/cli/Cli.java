@@ -362,7 +362,7 @@ public class Cli {
             out.printf("%-5d %-5d %-4d %-13s %s%n", t.linha(), t.coluna(), t.tamanho(), t.tipo(), t.lexemaEmUmaLinha());
         }
         for (Diagnostico d : lexer.erros()) {
-            out.println(d.codigo() + " " + d.formatar() + " [lexema: " + trecho(fonte, d) + "]");
+            out.println(d.formatar() + " [lexema: " + trecho(fonte, d) + "]");
         }
         return lexer.erros().isEmpty() ? OK : ERRO_PROGRAMA;
     }

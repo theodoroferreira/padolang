@@ -158,22 +158,27 @@ public class Parser {
         };
     }
 
-    // <ComandoId> ::= id ( "=" <Expressao> | "++" | "--" | "(" [ <Args> ] ")" )
-    // Atribuição e chamada começam com id; a fatoração deixa a escolha para o token seguinte (LL(1)).
+    // <ComandoId> ::= id ( <RestoAtribuicao> | "(" [ <Args> ] ")" )
+    // Atribuição e chamada começam com id; com a fatoração, o parser consome o id e decide
+    // pelo token que vem depois dele, sem olhar mais de um token à frente (LL(1)).
     private Comando comandoId() {
-        Token id = atual();
-        if (verificaProximo(ABRE_PAR)) {
-            Expressao.Chamada ch = chamada();
+        Token id = consumir(ID);
+        if (verifica(ABRE_PAR)) {
+            Expressao.Chamada ch = chamada(id);
             return new Comando.ChamadaComando(ch, id.linha(), id.coluna());
         }
-        return atribuicao();
+        return restoAtribuicao(id);
     }
 
-    // <Atribuicao> ::= id ( "=" <Expressao> | "++" | "--" )
-    // Usada também no início e no passo do papapadoin.
+    // <Atribuicao> ::= id <RestoAtribuicao>
+    // Usada no início e no passo do papapadoin.
     private Comando atribuicao() {
-        Token id = consumir(ID, "nome da variável");
+        return restoAtribuicao(consumir(ID, "nome da variável"));
+    }
 
+    // <RestoAtribuicao> ::= "=" <Expressao> | "++" | "--"
+    // Recebe o id já consumido por quem chamou.
+    private Comando restoAtribuicao(Token id) {
         if (aceitar(ATRIB)) {
             return new Comando.Atribuicao(id.lexema(), expressao(), id.linha(), id.coluna());
         }
@@ -376,10 +381,10 @@ public class Parser {
         Token t = atual();
         switch (t.tipo()) {
             case ID -> {
-                if (verificaProximo(ABRE_PAR)) {          // id seguido de '(' => chamada
-                    return chamada();
-                }
                 avancar();
+                if (verifica(ABRE_PAR)) {                 // id seguido de '(' => chamada
+                    return chamada(t);
+                }
                 return new Expressao.Variavel(t.lexema(), t.linha(), t.coluna());
             }
             case TIPO_INTER -> {                          // padoINTER(x): conversão explícita
@@ -415,9 +420,9 @@ public class Parser {
         }
     }
 
-    // id "(" [ <Args> ] ")"   — chamada de função, em expressão ou como comando
-    private Expressao.Chamada chamada() {
-        Token nome = consumir(ID, "nome da função");
+    // "(" [ <Args> ] ")" depois do id da função, em expressão ou como comando.
+    // Recebe o id já consumido por quem chamou.
+    private Expressao.Chamada chamada(Token nome) {
         consumir(ABRE_PAR);
         List<Expressao> args = new ArrayList<>();
         if (!verifica(FECHA_PAR)) {
@@ -440,11 +445,6 @@ public class Parser {
 
     private Token atual() {
         return tokens.get(pos);
-    }
-
-    /** Olha um token à frente sem consumir (id seguido de '(' é chamada). */
-    private boolean verificaProximo(TokenType tipo) {
-        return pos + 1 < tokens.size() && tokens.get(pos + 1).tipo() == tipo;
     }
 
     private Token avancar() {

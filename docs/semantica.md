@@ -112,10 +112,10 @@ Para a R21, a ideia é a mesma, trocando "retorna" por "sai do bloco": `padOUT`,
 
 ## Erros
 
-A semântica não para no primeiro erro: ela trabalha sobre uma AST completa e reúne todos os problemas, mostrando um por linha:
+A semântica não para no primeiro erro: ela trabalha sobre uma AST completa e reúne todos os problemas, mostrando um por linha, com o código da regra violada (da tabela acima):
 
 ```
-padoERRO semântico (linha 5, coluna 10): variável 'total' não declarada
+padoERRO semântico R1 (linha 5, coluna 10): variável 'total' não declarada
 ```
 
 A posição é a do token que representa o erro: o nome da variável, o operador de uma operação inválida, a palavra que abre um comando. Quando uma expressão já tem erro, o tipo dela vira "desconhecido" e as verificações que dependem dela são puladas, o que evita uma cascata de mensagens a partir de um único engano.

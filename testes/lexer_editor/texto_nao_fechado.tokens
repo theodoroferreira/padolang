@@ -22,4 +22,4 @@ LIN   COL   TAM  TIPO          LEXEMA
 5     12    1    JOINHA        👍
 6     1     1    FECHA_CHAVE   }
 7     1     0    EOF           <fim>
-L3 padoERRO léxico (linha 3, coluna 13): string não fechada [lexema: "aberto)👍]
+padoERRO léxico L3 (linha 3, coluna 13): string não fechada [lexema: "aberto)👍]

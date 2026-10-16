@@ -1,0 +1,14 @@
+# erro semântico: os três casos do enunciado no mesmo programa
+# (uso sem declaração, declaração duplicada e tipos incompatíveis).
+# O léxico e o parser param no primeiro erro; a semântica percorre o programa
+# inteiro e mostra todos, cada um com o código da regra violada.
+# espera-erro: R2 (linha 10, coluna 20): 'nota' já foi declarado como variável na linha 9
+# espera-erro: R4 (linha 11, coluna 28): a variável 'idade' é padoINTER e não pode receber um padoSTRING
+# espera-erro: R1 (linha 12, coluna 3): variável 'media' não declarada
+PADOIN {
+  padoin padoINTER nota = 7👍
+  padoin padoFLOAT nota = 8.5👍
+  padoin padoINTER idade = "vinte"👍
+  media = nota / 2👍
+  padoPRINTLN(nota)👍
+}

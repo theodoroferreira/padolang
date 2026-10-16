@@ -9,8 +9,9 @@
 #     erro de execução ("padoERRO de execução ...");
 #   - outro "erro" no nome: o transpilador precisa REJEITAR o programa, com mensagem que
 #     começa com "padoERRO";
-#   - nos dois casos de erro, uma linha "# espera-erro: <trecho>" no arquivo exige que a
-#     mensagem contenha esse trecho (assim o teste confere que o erro certo foi apontado);
+#   - nos dois casos de erro, cada linha "# espera-erro: <trecho>" no arquivo exige que a
+#     mensagem contenha esse trecho (assim o teste confere que o erro certo foi apontado;
+#     com várias linhas, todos os erros esperados precisam aparecer);
 #   - os demais precisam transpilar, compilar e executar sem falha. Se existir <nome>.saida,
 #     a saída do programa precisa ser exatamente igual a ela.
 #   - se existir <nome>.entrada, ele vira a entrada padrão do programa.
@@ -27,13 +28,22 @@ LIMITE=10
 total=0
 falhas=0
 
+# Devolve o primeiro trecho esperado ($1, um por linha) que não aparece na mensagem ($2).
+# Não imprime nada se todos aparecem (ou se não há trecho esperado).
+trecho_ausente() {
+  local trecho
+  while IFS= read -r trecho; do
+    [ -z "$trecho" ] || grep -qF -- "$trecho" <<< "$2" || { echo "$trecho"; return; }
+  done <<< "$1"
+}
+
 for f in testes/*.padoin exemplos/*.padoin; do
   total=$((total + 1))
   nome="$(basename "${f%.padoin}")"
   base="${f%.padoin}"
   entrada="$base.entrada"
   [ -f "$entrada" ] || entrada=/dev/null
-  esperado="$(sed -n 's/^#[[:space:]]*espera-erro:[[:space:]]*//p' "$f" | head -n 1)"
+  esperado="$(sed -n 's/^#[[:space:]]*espera-erro:[[:space:]]*//p' "$f")"
   motivo=""
 
   if [[ "$nome" == *erro_execucao* ]]; then
@@ -45,8 +55,8 @@ for f in testes/*.padoin exemplos/*.padoin; do
       motivo="passou de ${LIMITE}s (laço infinito?)"
     elif ! grep -q '^padoERRO de execução' <<< "$msg"; then
       motivo="esperava uma mensagem \"padoERRO de execução\""
-    elif [ -n "$esperado" ] && ! grep -qF -- "$esperado" <<< "$msg"; then
-      motivo="esperava a mensagem conter: $esperado"
+    elif ausente="$(trecho_ausente "$esperado" "$msg")"; [ -n "$ausente" ]; then
+      motivo="esperava a mensagem conter: $ausente"
     fi
 
   elif [[ "$nome" == *erro* ]]; then
@@ -56,8 +66,8 @@ for f in testes/*.padoin exemplos/*.padoin; do
       motivo="deveria ter sido rejeitado, mas foi aceito"
     elif ! grep -q '^padoERRO' <<< "$msg"; then
       motivo="a mensagem não começa com \"padoERRO\""
-    elif [ -n "$esperado" ] && ! grep -qF -- "$esperado" <<< "$msg"; then
-      motivo="esperava a mensagem conter: $esperado"
+    elif ausente="$(trecho_ausente "$esperado" "$msg")"; [ -n "$ausente" ]; then
+      motivo="esperava a mensagem conter: $ausente"
     fi
 
   else

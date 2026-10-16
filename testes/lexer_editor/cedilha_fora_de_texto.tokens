@@ -18,5 +18,5 @@ LIN   COL   TAM  TIPO          LEXEMA
 3     22    1    JOINHA        👍
 4     1     1    FECHA_CHAVE   }
 5     1     0    EOF           <fim>
-L6 padoERRO léxico (linha 2, coluna 21): caractere inválido 'ç' (U+00E7) [lexema: ç]
-L6 padoERRO léxico (linha 2, coluna 22): caractere inválido 'ã' (U+00E3) [lexema: ã]
+padoERRO léxico L6 (linha 2, coluna 21): caractere inválido 'ç' (U+00E7) [lexema: ç]
+padoERRO léxico L6 (linha 2, coluna 22): caractere inválido 'ã' (U+00E3) [lexema: ã]

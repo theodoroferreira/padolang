@@ -9,4 +9,4 @@ LIN   COL   TAM  TIPO          LEXEMA
 2     17    1    JOINHA        👍
 2     19    31   ERRO          #*# não fecha: o * é do "#*"\n}\n
 4     1     0    EOF           <fim>
-L7 padoERRO léxico (linha 2, coluna 19): comentário de bloco não fechado (falta o '*#') [lexema: #*]
+padoERRO léxico L7 (linha 2, coluna 19): comentário de bloco não fechado (falta o '*#') [lexema: #*]

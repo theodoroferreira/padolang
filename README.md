@@ -155,7 +155,7 @@ O resto da linguagem (`padBREAK`, `padCONTINUE`, operadores lógicos, conversõe
 
 ### 4. Quando algo dá errado
 
-Antes de gerar o C, a padolang confere o programa e aponta a fase, a linha e a coluna de cada erro. Com o `check` dá para conferir sem executar:
+Antes de gerar o C, a padolang confere o programa e aponta a fase, o código da regra violada, a linha e a coluna de cada erro. Com o `check` dá para conferir sem executar:
 
 ```
 PADOIN {
@@ -166,14 +166,14 @@ PADOIN {
 
 ```
 $ padolang check erro.padoin
-padoERRO semântico (linha 2, coluna 28): a variável 'idade' é padoINTER e não pode receber um padoSTRING
-padoERRO semântico (linha 3, coluna 15): variável 'idad' não declarada
+padoERRO semântico R4 (linha 2, coluna 28): a variável 'idade' é padoINTER e não pode receber um padoSTRING
+padoERRO semântico R1 (linha 3, coluna 15): variável 'idad' não declarada
 ```
 
 Esquecer o 👍 é um erro sintático, apontado onde o comando deveria ter terminado:
 
 ```
-padoERRO sintático (linha 3, coluna 1): esperado '👍' ao final do padoPRINTLN, mas encontrado '}'
+padoERRO sintático S1 (linha 3, coluna 1): esperado '👍' ao final do padoPRINTLN, mas encontrado '}'
 ```
 
 Erros que só aparecem ao rodar, como divisão por zero ou uma letra digitada onde se esperava um número, encerram o programa com `padoERRO de execução (linha N): ...`.
@@ -369,7 +369,7 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 
 - `erro_execucao` no nome: o programa precisa compilar e terminar com `padoERRO de execução`;
 - outro `erro` no nome: o transpilador precisa **rejeitar** o programa, com mensagem que começa com `padoERRO`;
-- nos dois casos, uma linha `# espera-erro: <trecho>` no arquivo exige que a mensagem contenha esse trecho, o que garante que o erro apontado é o certo;
+- nos dois casos, cada linha `# espera-erro: <trecho>` no arquivo exige que a mensagem contenha esse trecho, o que garante que o erro apontado é o certo (com várias linhas, todos os erros precisam aparecer);
 - os demais precisam transpilar, compilar e executar sem falha; se existir `<nome>.saida`, a saída precisa ser exatamente igual a ela;
 - se existir `<nome>.entrada`, ele é usado como entrada do programa;
 - cada programa tem no máximo 10 segundos, para um laço infinito não travar a suíte.
@@ -380,6 +380,7 @@ O script roda todos os programas de `testes/` e `exemplos/`, e o que ele exige d
 | `02_valido_completo` | condicional, repetição, entrada/saída, função e precedência |
 | `03_erro_lexico` | caractere que não pertence à linguagem |
 | `04_erro_sintatico` | declaração sem expressão após `=` |
+| `05_erro_semantico` | uso sem declaração, declaração duplicada e tipos incompatíveis no mesmo programa: a semântica mostra os três erros |
 | `05_erro_semantico_*` | um arquivo por regra semântica (R1 a R21, ver `docs/semantica.md`) |
 | `06_valido_semantica` | casos que a semântica precisa aceitar (`padoINTER` → `padoFLOAT`, blocos irmãos, chamada a função declarada depois) |
 | `07_erro_execucao_*` | erros que só aparecem ao rodar: divisão por zero, entrada inválida, fim da entrada, conversão fora da faixa |
